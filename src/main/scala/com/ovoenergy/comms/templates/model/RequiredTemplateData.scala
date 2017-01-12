@@ -9,6 +9,6 @@ object RequiredTemplateData {
 
   case class obj(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
   case class optObj(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
-  case class objs(elements: Seq[obj]) extends RequiredTemplateData
+  case class objs(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
 }
 
