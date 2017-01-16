@@ -91,8 +91,28 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "parse nested variables" in {
+    val input = "{{order.amount}}"
+    testValid(input, Map("order" -> obj(Map("amount" -> string))))
+  }
+
+  it should "parse deeply nested variables" in {
+    val input = "{{a.b.c1.d1}} {{a.b.c2.d1}} {{a.b.c1.d2}} {{a.b.c2.d2}}"
+    testValid(input, Map(
+        "a" -> obj(Map(
+          "b" -> obj(Map(
+            "c1" -> obj(Map(
+              "d1" -> string, "d2" -> string)),
+            "c2" -> obj(Map(
+              "d1" -> string, "d2" -> string))))))))
+  }
+
+  it should "understand 'this' in a nested variable" in {
+    val input = "{{this.amount}}"
+    testValid(input, Map("amount" -> string))
+  }
+
   it should "parse an {{#each}} block representing a sequence of objects" in {
-    pending
     val input =
       """
         |Hello {{firstName}},
@@ -110,8 +130,27 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "parse an {{#each}} with a nested key" in {
+    val input =
+      """
+        |Hello {{firstName}},
+        |You ordered the following things:
+        |{{#each order.items}}
+        |  - {{this.name}} (£{{this.price}})
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "firstName" -> string,
+      "order" -> obj(Map(
+        "items" -> objs(Map(
+          "name" -> string,
+          "price" -> string
+        ))
+      ))
+    ))
+  }
+
   it should "parse an {{#if}} block representing an optional object" in {
-    pending
     val input =
       """
         |Hello {{firstName}},
@@ -153,6 +192,8 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
       ))
     ))
   }
+
+  // TODO tests for else blocks
 
   // TODO tests for invalid templates, e.g. referencing the same thing as both optional and required, or string and map
 
