@@ -13,11 +13,30 @@ private[parsing] object ASTProcessing {
     val root = Obj.fresh(markAsConflict = () => ())
     implicit val context = Context(root)
     asts.foreach {
-      ast => insertAST(ast, root)
+      ast => processAST(ast, root)
     }
     root._convert.map(validObj => validObj.fields)
   }
 
+  /**
+    * Try to make `parent`.`name` into an object.
+    *
+    * - If it's already an object, that's fine, nothing to do
+    * - If it can be upgraded to an object, do so
+    * - If it can't be upgraded to an object, mark it as a conflict
+    *
+    * In case of conflict, we create and return a dummy object.
+    * Further recursive calls will add children to this object,
+    * blissfully unaware that the object is an orphan, not part of the AST tree.
+    *
+    * e.g. if we try to create objects `foo`, `foo.bar` and `foo.bar.baz`, but `foo` is already a string,
+    * we will:
+    * 1. mark `foo` as a conflict in the tree and create a dummy `foo` object
+    * 2. successfully add a `bar` object to the dummy `foo` object
+    * 3. successfully add a `baz` object to the `foo.bar` object
+    *
+    * @param path The full key of the object being inserted, e.g. `foo.bar.baz`, only used for error messaging
+    */
   private def insertObj(name: String, path: String, parent: Type): Obj = {
     val parentObj: Obj = parent match {
       case obj: Obj => obj
@@ -64,6 +83,28 @@ private[parsing] object ASTProcessing {
     }
   }
 
+  /**
+    * Split the key by dot, then walk down the tree, making everything an object along the way.
+    *
+    * e.g. if the key is "foo.bar.baz", we:
+    * 1. Create an object "foo" under the root
+    * 2. Create an object "bar" under "foo"
+    * 3. Return the "bar" object as the final result.
+    *
+    * For each tree node along the way:
+    * - If it's already an object, that's fine, nothing to do
+    * - If it can be upgraded to an object, do so
+    * - If it can't be upgraded to an object, mark it as a conflict
+    *
+    * Whether we walk down from the global root or the local root depends on the value of the key.
+    * e.g. if the key is "foo.bar", we assume it references a top-level "foo" object, so we start
+    * from the global root.
+    *
+    * On the other hand, if the key is "this.foo.bar", then the reference is scoped to "this", so
+    * we start from the local root. (Note that the global root and the local root may be the same place).
+    *
+    * @return The final node that was created
+    */
   private def walkTree(rawKey: String, localRoot: Type)(implicit ctx: Context): (DottedKey, Type) = {
     val key = DottedKey.parse(rawKey)
     val (normalisedKey, correctRoot) = chooseRoot(key, localRoot)
@@ -76,6 +117,12 @@ private[parsing] object ASTProcessing {
     (key, parentNode)
   }
 
+  /**
+    * Choose whether to walk the tree starting at the global root or the local root.
+    *
+    * If the key starts with "this", it's scoped to the "this" context, so we should
+    * strip the "this" and start walking from the local root.
+    */
   private def chooseRoot(key: DottedKey, localRoot: Type)(implicit ctx: Context): (DottedKey, Type) = {
     if (key.init.headOption.contains("this") || (key.init.isEmpty && key.last == "this"))
       (DottedKey(key.init.drop(1), key.last), localRoot)
@@ -83,77 +130,92 @@ private[parsing] object ASTProcessing {
       (key, ctx.root)
   }
 
-  private def insertAST(ast: HandlebarsAST, localRoot: Type)(implicit ctx: Context): Unit = ast match {
-    case Ref(k) =>
-      val (key, parentNode) = walkTree(k, localRoot)
-      parentNode match {
-        case Str(markAsConflict) =>
-          if (key.last == "this") {
-            // OK, nothing to do
-          } else
-          // we're trying to reference a child field of a string - conflict!
-            markAsConflict()
-        case StrOrObj(replaceWith) =>
-          if (key.last == "this") {
-            // it must be a string
-            val str = Str(markAsConflict = () => replaceWith(Conflict(k)))
-            replaceWith(str)
-          } else {
-            // it must be an object
-            val obj = Obj.fresh(markAsConflict = () => replaceWith(Conflict(k)))
-            obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(k))))
-            replaceWith(obj)
-          }
-        case obj@Obj(_, markAsConflict) =>
-          if (key.last == "this") {
-            markAsConflict()
-          } else {
-            obj.get(key.last) match {
-              case Some(Str(_)) => // already inserted, nothing to do
-              case None | Some(StrOrObj(_)) => obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(k))))
-              case Some(Opt(StrOrObj(replaceWith))) => replaceWith(Str(markAsConflict = () => replaceWith(Conflict(k))))
-              case _ =>
-                obj.put(key.last, Conflict(k)) // conflict! the same thing has 2 different types
-            }
-          }
-        case Conflict(_) => // nothing to do
-      }
-    case Each(k, children, elseChildren) =>
-      val (key, parentNode) = walkTree(k, localRoot)
-      parentNode match {
-        case obj: Obj =>
+  private def processRef(ref: Ref, localRoot: Type)(implicit ctx: Context): Unit = {
+    val rawKey = ref.text
+    val (key, parentNode) = walkTree(rawKey, localRoot)
+    parentNode match {
+      case Str(markAsConflict) =>
+        if (key.last == "this") {
+          // OK, nothing to do
+        } else
+        // we're trying to reference a child field of a string - conflict!
+          markAsConflict()
+      case StrOrObj(replaceWith) =>
+        if (key.last == "this") {
+          // it must be a string
+          val str = Str(markAsConflict = () => replaceWith(Conflict(rawKey)))
+          replaceWith(str)
+        } else {
+          // it must be an object
+          val obj = Obj.fresh(markAsConflict = () => replaceWith(Conflict(rawKey)))
+          obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
+          replaceWith(obj)
+        }
+      case obj@Obj(_, markAsConflict) =>
+        if (key.last == "this") {
+          markAsConflict()
+        } else {
           obj.get(key.last) match {
-            case Some(Loop(elem)) =>
-              children.foreach(insertAST(_, localRoot = elem))
-              elseChildren.foreach(insertAST(_, localRoot = localRoot))
-            case None =>
-              val loop = Loop.strOrObj
-              obj.put(key.last, loop)
-              children.foreach(insertAST(_, localRoot = loop.x))
-              elseChildren.foreach(insertAST(_, localRoot = localRoot))
+            case Some(Str(_)) => // already inserted, nothing to do
+            case None | Some(StrOrObj(_)) => obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
+            case Some(Opt(StrOrObj(replaceWith))) => replaceWith(Str(markAsConflict = () => replaceWith(Conflict(rawKey))))
             case _ =>
-              obj.put(key.last, Conflict(k)) // conflict! the same thing has 2 different types
+              obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
           }
-        case _ => // TODO
-      }
-    case If(k, children, elseChildren) =>
-      val (key, parentNode) = walkTree(k, localRoot)
-      parentNode match {
-        case obj: Obj =>
-          obj.get(key.last) match {
-            case Some(Opt(elem)) =>
-              children.foreach(insertAST(_, localRoot = localRoot))
-              elseChildren.foreach(insertAST(_, localRoot = localRoot))
-            case None =>
-              val opt = Opt.strOrObj
-              obj.put(key.last, opt)
-              children.foreach(insertAST(_, localRoot = localRoot))
-              elseChildren.foreach(insertAST(_, localRoot = localRoot))
-            case _ =>
-              obj.put(key.last, Conflict(k)) // conflict! the same thing has 2 different types
-          }
-        case _ => // TODO
-      }
+        }
+      case Conflict(_) => // nothing to do
+    }
+  }
+
+  private def processEach(each: Each, localRoot: Type)(implicit ctx: Context): Unit = {
+    val rawKey = each.text
+    val (key, parentNode) = walkTree(rawKey, localRoot)
+    parentNode match {
+      case obj: Obj =>
+        obj.get(key.last) match {
+          case Some(Loop(elem)) =>
+            each.children.foreach(processAST(_, localRoot = elem))
+            each.elseChildren.foreach(processAST(_, localRoot = localRoot))
+          case None =>
+            val loop = Loop.strOrObj
+            obj.put(key.last, loop)
+            each.children.foreach(processAST(_, localRoot = loop.x))
+            each.elseChildren.foreach(processAST(_, localRoot = localRoot))
+          case _ =>
+            obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
+        }
+      case _ => // TODO
+    }
+  }
+
+  private def processIf(_if: If, localRoot: Type)(implicit ctx: Context): Unit = {
+    val rawKey = _if.text
+    val (key, parentNode) = walkTree(rawKey, localRoot)
+    parentNode match {
+      case obj: Obj =>
+        obj.get(key.last) match {
+          case Some(Opt(elem)) =>
+            _if.children.foreach(processAST(_, localRoot = localRoot))
+            _if.elseChildren.foreach(processAST(_, localRoot = localRoot))
+          case None =>
+            val opt = Opt.strOrObj
+            obj.put(key.last, opt)
+            _if.children.foreach(processAST(_, localRoot = localRoot))
+            _if.elseChildren.foreach(processAST(_, localRoot = localRoot))
+          case _ =>
+            obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
+        }
+      case _ => // TODO
+    }
+  }
+
+  /**
+    * Update the intermediate AST tree to reflect the new information provided by the given AST.
+    */
+  private def processAST(ast: HandlebarsAST, localRoot: Type)(implicit ctx: Context): Unit = ast match {
+    case ref: Ref => processRef(ref, localRoot)
+    case each: Each => processEach(each, localRoot)
+    case _if: If => processIf(_if, localRoot)
   }
 
 }
