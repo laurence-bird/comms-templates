@@ -316,9 +316,41 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     ))
   }
 
-  // TODO tests for invalid templates, e.g. referencing the same thing as both optional and required, or string and map
+  it should "recognise a conflict if a field is both a string and an object" in {
+    val input =
+      """
+        |You ordered {{item}}.
+        |The amount was {{item.amount}}
+      """.stripMargin
+    testInvalid(input)
+  }
+
+  it should "recognise a conflict if a field is both mandatory and optional" in {
+    val input =
+      """
+        |You ordered {{item}}.
+        |{{#if item}}
+        |  {{item}}
+        |{{/if}}
+      """.stripMargin
+    testInvalid(input)
+  }
+
+  it should "recognise a conflict if a field is both an object and a list" in {
+    val input =
+      """
+        |{{a.b}}.
+        |{{#each a}}
+        |  {{this.b}}
+        |{{/each}}
+      """.stripMargin
+    testInvalid(input)
+  }
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
     parseHandlebarsTemplate(input) should be(Valid(HandlebarsTemplate(input, expected)))
+
+  private def testInvalid(input: String) =
+    parseHandlebarsTemplate(input) should be('Invalid)
 
 }

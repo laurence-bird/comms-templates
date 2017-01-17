@@ -98,10 +98,10 @@ private[parsing] object IntermediateAST {
     */
   case class Opt(var x: Type) extends Node {
     def toRequiredTemplateData = x match {
-      case Str(_) => Valid(optString)
-      case o @ Obj(_, _) => o._convert.map(validObj => optObj(validObj.fields))
-      case StrOrObj(_) => Valid(optString)
-      case Conflict => Conflict.toRequiredTemplateData
+      case _: Str => Valid(optString)
+      case o: Obj => o._convert.map(validObj => optObj(validObj.fields))
+      case _: StrOrObj => Valid(optString)
+      case c: Conflict => c.toRequiredTemplateData
     }
   }
 
@@ -120,10 +120,10 @@ private[parsing] object IntermediateAST {
     */
   case class Loop(var x: Type) extends Node {
     def toRequiredTemplateData = x match {
-      case Str(_) => Valid(strings)
-      case o :Obj => o._convert.map(validObj => objs(validObj.fields))
-      case StrOrObj(_) => Valid(strings)
-      case Conflict => Conflict.toRequiredTemplateData
+      case _: Str => Valid(strings)
+      case o: Obj => o._convert.map(validObj => objs(validObj.fields))
+      case _: StrOrObj => Valid(strings)
+      case c: Conflict => c.toRequiredTemplateData
     }
   }
 
@@ -131,9 +131,9 @@ private[parsing] object IntermediateAST {
     * Represents the fact that the template references the same key as different types,
     * e.g. as both a string and an object, or as both an option and a list, etc.
     */
-  case object Conflict extends Type {
+  case class Conflict(key: String) extends Type {
     def toRequiredTemplateData =
-      Invalid(NonEmptyList.of("Ambiguous field (TODO get the field name into this error message)"))
+      Invalid(NonEmptyList.of(s"Field with key '$key' has an ambiguous type."))
   }
 
 }
