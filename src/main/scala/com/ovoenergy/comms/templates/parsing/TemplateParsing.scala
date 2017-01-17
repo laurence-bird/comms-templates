@@ -4,6 +4,7 @@ import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyList, ValidatedNel}
 import cats.syntax.traverse._
 import cats.instances.list._
+import cats.instances.map._
 import com.ovoenergy.comms.templates.model.{ErrorsOr, HandlebarsTemplate, RequiredTemplateData}
 import org.parboiled2._
 
@@ -105,8 +106,8 @@ object TemplateParsing {
       def convert: ErrorsOr[RequiredTemplateData] = _convert
 
       def _convert: ErrorsOr[obj] = {
-        val validatedFields: ErrorsOr[List[RequiredTemplateData]] = fields.toMap.values.toList.traverse(_.convert)
-        validatedFields.map(values => obj((fields.keys zip values).toMap))
+        val validatedFields: ErrorsOr[Map[String, RequiredTemplateData]] = fields.toMap.traverseU(_.convert)
+        validatedFields.map(fields => obj(fields))
       }
 
     }
@@ -162,7 +163,8 @@ object TemplateParsing {
     object DottedKey {
       def parse(key: String): DottedKey = {
         val parts = key.split('.')
-        DottedKey(parts.dropRight(1), parts.last)
+        val result = DottedKey(parts.dropRight(1), parts.last)
+        result
       }
     }
     case class DottedKey(init: Seq[String], last: String)
@@ -199,44 +201,48 @@ object TemplateParsing {
           // replace with a Conflict and return a dummy Obj so we can continue
           parentObj.put(name, Conflict)
           Obj.fresh(() => ())
-        case Some(Opt(obj: PotentialObj)) =>
-          println(s"Opt($obj), name = $name, recursing...")
-          insertObj(name, obj)
+        case Some(Opt(existingObj: Obj)) =>
+          // nothing to do
+          existingObj
+        case Some(Opt(StrOrObj(replaceWith))) =>
+          // upgrade to an object
+          val freshObj = Obj.fresh(markAsConflict = () => replaceWith(Conflict))
+          replaceWith(freshObj)
+          freshObj
         case Some(Conflict) =>
           // nothing to do, just return a dummy Obj
           Obj.fresh(() => ())
       }
     }
 
-    def walkTree(rawKey: String, localRoot: Type, scopeName: String): (DottedKey, Type) = {
+    def walkTree(rawKey: String, localRoot: Type): (DottedKey, Type) = {
       val key = DottedKey.parse(rawKey)
-      val (normalisedKey, correctRoot) = chooseRoot(key, localRoot, scopeName)
-      println(s"key = $key, normalised to $normalisedKey, chose root $correctRoot")
+      val (normalisedKey, correctRoot) = chooseRoot(key, localRoot)
       val parentNode = normalisedKey.init.foldLeft(correctRoot){
         case (parent, name) => insertObj(name, parent)
       }
       (key, parentNode)
     }
 
-    def chooseRoot(key: DottedKey, localRoot: Type, scopeName: String): (DottedKey, Type) = {
-      if (key.init.headOption.exists(k => k == "this" || k == scopeName))
+    def chooseRoot(key: DottedKey, localRoot: Type): (DottedKey, Type) = {
+      if (key.init.headOption.contains("this"))
         (DottedKey(key.init.tail, key.last), localRoot)
       else
         (key, root)
     }
 
-    def insert(ast: AST, localRoot: Type, scopeName: String): Unit = ast match {
+    def insert(ast: AST, localRoot: Type): Unit = ast match {
       case Ref(k) =>
-        val (key, parentNode) = walkTree(k, localRoot, scopeName)
+        val (key, parentNode) = walkTree(k, localRoot)
         parentNode match {
           case Str(markAsConflict) =>
-            if (key.last == "this" || k == scopeName) {
+            if (key.last == "this") {
               // OK, nothing to do
             } else
             // we're trying to reference a child field of a string - conflict!
               markAsConflict()
           case StrOrObj(replaceWith) =>
-            if (key.last == "this" || k == scopeName) {
+            if (key.last == "this") {
               // it must be a string
               val str = Str(markAsConflict = () => replaceWith(Conflict))
               replaceWith(str)
@@ -247,45 +253,47 @@ object TemplateParsing {
               replaceWith(obj)
             }
           case obj@Obj(_, markAsConflict) =>
-            if (key.last == "this" || k == scopeName) {
+            if (key.last == "this") {
+              println(s"Conflict! $key") // TODO investigate this
               markAsConflict()
             } else {
               obj.get(key.last) match {
                 case Some(Str(_)) => // already inserted, nothing to do
                 case None | Some(StrOrObj(_)) => obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict)))
-                case _ => obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
+                case Some(Opt(StrOrObj(replaceWith))) => replaceWith(Str(markAsConflict = () => replaceWith(Conflict)))
+                case _ =>
+                  obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
               }
             }
           case Conflict => // nothing to do
         }
       case Each(k, children) =>
-        val (key, parentNode) = walkTree(k, localRoot, scopeName)
+        val (key, parentNode) = walkTree(k, localRoot)
         parentNode match {
           case obj: Obj =>
             obj.get(key.last) match {
               case Some(Loop(elem)) =>
-                children.foreach(insert(_, localRoot = elem, scopeName = key.last))
+                children.foreach(insert(_, localRoot = elem))
               case None =>
                 val loop = Loop.strOrObj
                 obj.put(key.last, loop)
-                children.foreach(insert(_, localRoot = loop.x, scopeName = key.last))
+                children.foreach(insert(_, localRoot = loop.x))
               case _ =>
                 obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
             }
           case _ => // TODO
         }
       case If(k, children) =>
-        val (key, parentNode) = walkTree(k, localRoot, scopeName)
+        val (key, parentNode) = walkTree(k, localRoot)
         parentNode match {
           case obj: Obj =>
             obj.get(key.last) match {
               case Some(Opt(elem)) =>
-                children.foreach(insert(_, localRoot = localRoot, scopeName = key.last))
+                children.foreach(insert(_, localRoot = localRoot))
               case None =>
                 val opt = Opt.strOrObj
                 obj.put(key.last, opt)
-                println(s"Added an Opt. Tree now: $root")
-                children.foreach(insert(_, localRoot = localRoot, scopeName = key.last))
+                children.foreach(insert(_, localRoot = localRoot))
               case _ =>
                 obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
             }
@@ -293,7 +301,7 @@ object TemplateParsing {
         }
     }
 
-    asts.foreach { ast => insert(ast, root, "") }
+    asts.foreach { ast => insert(ast, root) }
 
     root._convert.map(validObj => validObj.fields)
   }

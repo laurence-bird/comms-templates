@@ -168,7 +168,6 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
   }
 
   it should "parse a tree of nested {{#each}} and {{#if}} blocks" in {
-    pending
     val input =
       """
         |{{#each things}}
@@ -188,6 +187,54 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
         "c" -> string,
         "d" -> objs(Map(
           "a" -> string
+        ))
+      ))
+    ))
+  }
+
+  it should "parse the most complicated thing I can think of" in {
+    val input =
+      """
+        |{{a}}
+        |{{this.b}}
+        |{{#each things}}
+        |  {{c}}
+        |  {{d.a}}
+        |  {{this.a.a}}
+        |  {{#if this.b.a}}
+        |    {{this.c}}
+        |    {{#each this.d}}
+        |      {{a}}
+        |      {{b}}
+        |      {{c}}
+        |      {{d.a}}
+        |      {{d.b}}
+        |      {{this.a}}
+        |      {{#if this.b.a}}
+        |        {{this.b.a}}
+        |      {{/if}}
+        |      {{#if this.b.c}}
+        |        {{this.b.c.d}}
+        |      {{/if}}
+        |    {{/each}}
+        |  {{/if}}
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "a" -> string,
+      "b" -> string,
+      "c" -> string,
+      "d" -> obj(Map("a" -> string, "b" -> string)),
+      "things" -> objs(Map(
+        "a" -> obj(Map("a" -> string)),
+        "b" -> obj(Map("a" -> optString)),
+        "c" -> string,
+        "d" -> objs(Map(
+          "a" -> string,
+          "b" -> obj(Map(
+            "a" -> optString,
+            "c" -> optObj(Map("d" -> string))
+          ))
         ))
       ))
     ))
