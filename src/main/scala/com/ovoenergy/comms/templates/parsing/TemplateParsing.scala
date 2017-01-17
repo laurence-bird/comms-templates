@@ -3,7 +3,6 @@ package com.ovoenergy.comms.templates.parsing
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{NonEmptyList, ValidatedNel}
 import cats.syntax.traverse._
-import cats.instances.list._
 import cats.instances.map._
 import com.ovoenergy.comms.templates.model.{ErrorsOr, HandlebarsTemplate, RequiredTemplateData}
 import org.parboiled2._
@@ -225,8 +224,8 @@ object TemplateParsing {
     }
 
     def chooseRoot(key: DottedKey, localRoot: Type): (DottedKey, Type) = {
-      if (key.init.headOption.contains("this"))
-        (DottedKey(key.init.tail, key.last), localRoot)
+      if (key.init.headOption.contains("this") || (key.init.isEmpty && key.last == "this"))
+        (DottedKey(key.init.drop(1), key.last), localRoot)
       else
         (key, root)
     }
@@ -254,7 +253,6 @@ object TemplateParsing {
             }
           case obj@Obj(_, markAsConflict) =>
             if (key.last == "this") {
-              println(s"Conflict! $key") // TODO investigate this
               markAsConflict()
             } else {
               obj.get(key.last) match {
