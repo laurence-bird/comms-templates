@@ -150,6 +150,25 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     ))
   }
 
+  it should "parse nested {{#each}} blocks" in {
+    val input =
+      """
+        |{{#each orders}}
+        |  {{#each this.items}}
+        |    {{this.name}} {{this.price}}
+        |  {{/each}}
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "orders" -> objs(Map(
+        "items" -> objs(Map(
+          "name" -> string,
+          "price" -> string
+        ))
+      ))
+    ))
+  }
+
   it should "parse an {{#if}} block representing an optional object" in {
     val input =
       """
@@ -163,6 +182,32 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
       "order" -> optObj(Map(
         "item" -> string,
         "amount" -> string
+      ))
+    ))
+  }
+
+  it should "parse nested {{#if}} blocks" in {
+    val input =
+      """
+        |{{#if thing}}
+        |  {{#if thing.a}}
+        |    {{thing.a}} {{thing.b}}
+        |  {{/if}}
+        |{{/if}}
+        |
+        |{{#if otherThing}}
+        |  {{#if otherThing.a}}
+        |    {{otherThing.a.b}}
+        |  {{/if}}
+        |{{/if}}
+      """.stripMargin
+    testValid(input, Map(
+      "thing" -> optObj(Map(
+        "a" -> optString,
+        "b" -> string
+      )),
+      "otherThing" -> optObj(Map(
+        "a" -> optObj(Map("b" -> string))
       ))
     ))
   }
@@ -342,6 +387,19 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
         |{{a.b}}.
         |{{#each a}}
         |  {{this.b}}
+        |{{/each}}
+      """.stripMargin
+    testInvalid(input)
+  }
+
+  it should "recognise a conflict if a field is both a string and a list" in {
+    val input =
+      """
+        |{{a}}.
+        |{{#each a}}
+        |  {{#each this.b}}
+        |    {{this}}
+        |  {{/each}}
         |{{/each}}
       """.stripMargin
     testInvalid(input)

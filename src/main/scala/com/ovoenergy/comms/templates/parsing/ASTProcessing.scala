@@ -138,7 +138,7 @@ private[parsing] object ASTProcessing {
         if (key.last == "this") {
           // OK, nothing to do
         } else
-        // we're trying to reference a child field of a string - conflict!
+          // we're trying to reference a child field of a string - conflict!
           markAsConflict()
       case StrOrObj(replaceWith) =>
         if (key.last == "this") {
@@ -184,7 +184,19 @@ private[parsing] object ASTProcessing {
           case _ =>
             obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
         }
-      case _ => // TODO
+      case StrOrObj(replaceWith) =>
+        // upgrade to object
+        val freshObj = Obj.fresh(markAsConflict = () => replaceWith(Conflict(rawKey)))
+        replaceWith(freshObj)
+
+        val loop = Loop.strOrObj
+        freshObj.put(key.last, loop)
+        each.children.foreach(processAST(_, localRoot = loop.x))
+        each.elseChildren.foreach(processAST(_, localRoot = localRoot))
+
+      case _ =>
+        println("yo I'm in your unhandled case (each)")
+        // TODO is this case ever used?
     }
   }
 
@@ -205,7 +217,9 @@ private[parsing] object ASTProcessing {
           case _ =>
             obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
         }
-      case _ => // TODO
+      case _ =>
+        println("yo I'm in your unhandled case (if)")
+        // TODO is this case ever used?
     }
   }
 
