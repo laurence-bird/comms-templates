@@ -13,7 +13,7 @@ object TemplateParsing {
   /**
     * Parse a Handlebars template to discover what type of data would be needed to correctly populate it.
     */
-  def parseHandlebars(input: String): ErrorsOr[HandlebarsTemplate] = {
+  def parseHandlebarsTemplate(input: String): ErrorsOr[HandlebarsTemplate] = {
     val parser = new HandlebarsASTParser(input)
 
     parser.WholeTemplate.run() match {

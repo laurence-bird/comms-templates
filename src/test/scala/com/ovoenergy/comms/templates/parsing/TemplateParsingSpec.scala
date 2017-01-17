@@ -240,11 +240,85 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     ))
   }
 
-  // TODO tests for else blocks
+  it should "parse an {{#each}} block representing a sequence of strings, with an else block" in {
+    val input =
+      """
+        |Hello {{firstName}},
+        |You ordered the following things:
+        |{{#each things}}
+        |  - {{this}}
+        |{{else}}
+        |  You didn't order anything. {{yolo}}!
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "firstName" -> string,
+      "yolo" -> string,
+      "things" -> strings
+    ))
+  }
+
+  it should "parse an {{#each}} block representing a sequence of objects, with an else block" in {
+    val input =
+      """
+        |Hello {{firstName}},
+        |You ordered the following things:
+        |{{#each things}}
+        |  - {{this.name}} (£{{this.price}})
+        |{{else}}
+        |  You didn't order anything. {{yolo}}!
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "firstName" -> string,
+      "yolo" -> string,
+      "things" -> objs(Map(
+        "name" -> string,
+        "price" -> string
+      ))
+    ))
+  }
+
+  it should "parse an {{#if}} block representing an optional string, with an else block" in {
+    val input =
+      """
+        |Hello {{firstName}},
+        |{{#if order}}
+        |  You ordered {{order}}.
+        |{{else}}
+        |  You didn't order anything. {{yolo}}!
+        |{{/if}}
+      """.stripMargin
+    testValid(input, Map(
+      "firstName" -> string,
+      "yolo" -> string,
+      "order" -> optString
+    ))
+  }
+
+  it should "parse an {{#if}} block representing an optional object, with an else block" in {
+    val input =
+      """
+        |Hello {{firstName}},
+        |{{#if order}}
+        |  You ordered {{order.item}} for £{{order.amount}}.
+        |{{else}}
+        |  You didn't order anything. {{yolo}}!
+        |{{/if}}
+      """.stripMargin
+    testValid(input, Map(
+      "firstName" -> string,
+      "yolo" -> string,
+      "order" -> optObj(Map(
+        "item" -> string,
+        "amount" -> string
+      ))
+    ))
+  }
 
   // TODO tests for invalid templates, e.g. referencing the same thing as both optional and required, or string and map
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
-    parseHandlebars(input) should be(Valid(HandlebarsTemplate(input, expected)))
+    parseHandlebarsTemplate(input) should be(Valid(HandlebarsTemplate(input, expected)))
 
 }

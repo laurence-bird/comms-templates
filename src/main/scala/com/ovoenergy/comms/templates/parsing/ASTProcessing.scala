@@ -115,33 +115,37 @@ private[parsing] object ASTProcessing {
           }
         case Conflict => // nothing to do
       }
-    case Each(k, children) =>
+    case Each(k, children, elseChildren) =>
       val (key, parentNode) = walkTree(k, localRoot)
       parentNode match {
         case obj: Obj =>
           obj.get(key.last) match {
             case Some(Loop(elem)) =>
               children.foreach(insert(_, localRoot = elem))
+              elseChildren.foreach(insert(_, localRoot = localRoot))
             case None =>
               val loop = Loop.strOrObj
               obj.put(key.last, loop)
               children.foreach(insert(_, localRoot = loop.x))
+              elseChildren.foreach(insert(_, localRoot = localRoot))
             case _ =>
               obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
           }
         case _ => // TODO
       }
-    case If(k, children) =>
+    case If(k, children, elseChildren) =>
       val (key, parentNode) = walkTree(k, localRoot)
       parentNode match {
         case obj: Obj =>
           obj.get(key.last) match {
             case Some(Opt(elem)) =>
               children.foreach(insert(_, localRoot = localRoot))
+              elseChildren.foreach(insert(_, localRoot = localRoot))
             case None =>
               val opt = Opt.strOrObj
               obj.put(key.last, opt)
               children.foreach(insert(_, localRoot = localRoot))
+              elseChildren.foreach(insert(_, localRoot = localRoot))
             case _ =>
               obj.put(key.last, Conflict) // conflict! the same thing has 2 different types
           }
