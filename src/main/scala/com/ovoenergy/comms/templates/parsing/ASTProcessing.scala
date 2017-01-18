@@ -9,13 +9,13 @@ private[parsing] object ASTProcessing {
 
   private case class Context(root: Obj)
 
-  def buildRequiredTemplateData(asts: Seq[HandlebarsAST]): ErrorsOr[Map[String, RequiredTemplateData]] = {
+  def buildRequiredTemplateData(asts: Seq[HandlebarsAST]): ErrorsOr[RequiredTemplateData.obj] = {
     val root = Obj.fresh(markAsConflict = () => ())
     implicit val context = Context(root)
     asts.foreach {
       ast => processAST(ast, root)
     }
-    root._convert.map(validObj => validObj.fields)
+    root._convert
   }
 
   /**

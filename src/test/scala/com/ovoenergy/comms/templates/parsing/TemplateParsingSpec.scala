@@ -406,9 +406,9 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
   }
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
-    parseHandlebarsTemplate(input) should be(Valid(HandlebarsTemplate(input, expected)))
+    parseHandlebarsTemplate(input) should be(HandlebarsTemplate(input, Valid(obj(expected))))
 
   private def testInvalid(input: String) =
-    parseHandlebarsTemplate(input) should be('Invalid)
+    parseHandlebarsTemplate(input).requiredData should be('Invalid)
 
 }

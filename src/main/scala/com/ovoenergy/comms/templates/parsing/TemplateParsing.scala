@@ -2,7 +2,6 @@ package com.ovoenergy.comms.templates.parsing
 
 import cats.data.Validated.Invalid
 import cats.data.NonEmptyList
-import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model.HandlebarsTemplate
 import org.parboiled2._
 
@@ -13,18 +12,19 @@ object TemplateParsing {
   /**
     * Parse a Handlebars template to discover what type of data would be needed to correctly populate it.
     */
-  def parseHandlebarsTemplate(input: String): ErrorsOr[HandlebarsTemplate] = {
+  def parseHandlebarsTemplate(input: String): HandlebarsTemplate = {
     val parser = new HandlebarsASTParser(input)
 
-    parser.WholeTemplate.run() match {
+    val requiredTemplateData = parser.WholeTemplate.run() match {
       case Success(asts) =>
         ASTProcessing.buildRequiredTemplateData(asts)
-          .map(HandlebarsTemplate(input, _))
       case Failure(parseError: ParseError) =>
         Invalid(NonEmptyList.of(parseError.format(parser)))
       case Failure(other) =>
         Invalid(NonEmptyList.of(other.toString))
     }
+
+    HandlebarsTemplate(input, requiredTemplateData)
   }
 
 }

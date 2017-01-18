@@ -1,77 +1,76 @@
 package com.ovoenergy.comms.templates.model
 
-sealed trait RequiredTemplateData
+import cats.data.{NonEmptyList, Validated}
+import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.traverse._
+import cats.instances.list._
+import com.ovoenergy.comms.templates.ErrorsOr
 
-object RequiredTemplateData {
-  case object string extends RequiredTemplateData
-  case object optString extends RequiredTemplateData
-  case object strings extends RequiredTemplateData
-
-  case class obj(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
-  case class optObj(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
-  case class objs(fields: Map[String, RequiredTemplateData]) extends RequiredTemplateData
+sealed trait RequiredTemplateData {
+  def description: String
 }
 
-/*
-hello {{ firstName }}
-{{#each items}}
-  Item: {{this}}
-{{/each}}
+object RequiredTemplateData {
+  type Fields = Map[String, RequiredTemplateData]
 
-Map(
-  "firstName" -> string,
-  "items" -> strings
-)
+  case object string extends RequiredTemplateData { val description = "a mandatory string" }
+  case object optString extends RequiredTemplateData { val description = "an optional string" }
+  case object strings extends RequiredTemplateData { val description = "a list of strings" }
 
-case class TemplateData(firstName: String, items: Seq[String])
- */
+  case class obj(fields: Fields) extends RequiredTemplateData { val description = "a mandatory object" }
+  case class optObj(fields: Fields) extends RequiredTemplateData { val description = "an optional object" }
+  case class objs(fields: Fields) extends RequiredTemplateData { val description = "a list of objects" }
 
-/*
-hello {{ user.firstName }}
-{{#each items}}
-  Item: {{this.name}} {{this.amount}}
-{{/each}}
+  /**
+    * Combine two trees into one, returning errors for any conflicts,
+    * i.e. if the same node being referenced as two different types.
+    */
+  def combine(fst: RequiredTemplateData, snd: RequiredTemplateData): ErrorsOr[RequiredTemplateData] = {
+    def invalid(a: RequiredTemplateData, b: RequiredTemplateData, path: Vector[String]): ErrorsOr[RequiredTemplateData] =
+      Invalid(NonEmptyList.of(
+        s"${path.mkString(".")} is referenced as both ${a.description} and ${b.description}}"
+      ))
 
-After parsing:
+    def recurseFields(fields1: Fields, fields2: Fields, path: Vector[String]): ErrorsOr[Fields] = {
+      val commonKeys = fields1.keySet.intersect(fields2.keySet).toList
 
-Seq(
-  Ref("user.firstName"),
-  Each("items", Seq(
-    Ref("this.name"),
-    Ref("this.amount")
-  ))
-)
+      val aggregatedCommonValues: ErrorsOr[List[RequiredTemplateData]] =
+        commonKeys.traverseU(k => run(fields1(k), fields2(k), path :+ k))
 
-Map(
-  "user" -> obj(Map("firstName" -> string)),
-  "items" -> objs(Map("name" -> string, "amount" -> string))
-)
+      val aggregatedCommonFields: ErrorsOr[Fields] =
+        aggregatedCommonValues.map(values => (commonKeys zip values).toMap)
 
-case class User(firstName: String)
-case class Item(name: String, amount: String)
-case class TemplateData(user: User, items: Seq[Item])
- */
+      aggregatedCommonFields.map(acf => fields1 ++ fields2 ++ acf)
+    }
 
-/*
-hello {{ firstName }}
-{{#if gasReading}}
-  Gas reading: {{gasReading}}
-{{/if}}
+    def sameSimpleType: PartialFunction[(RequiredTemplateData, RequiredTemplateData, Vector[String]), ErrorsOr[RequiredTemplateData]] = {
+      case (`string`, `string`, _) => Valid(`string`)
+      case (`optString`, `optString`, _) => Valid(`optString`)
+      case (`strings`, `strings`, _) => Valid(`strings`)
+    }
 
-Map(
-  "firstName" -> string,
-  "gasReading" -> optString
-)
- */
+    def bothObj: PartialFunction[(RequiredTemplateData, RequiredTemplateData, Vector[String]), ErrorsOr[RequiredTemplateData]] = {
+      case (obj(fields1), obj(fields2), path) => recurseFields(fields1, fields2, path).map(obj)
+    }
 
-/*
-hello {{ firstName }}
-{{#if gasReading}}
-  Gas: {{gasReading.date}} {{gasReading.amount}}
-{{/if}}
+    def bothOptObj: PartialFunction[(RequiredTemplateData, RequiredTemplateData, Vector[String]), ErrorsOr[RequiredTemplateData]] = {
+      case (optObj(fields1), optObj(fields2), path) => recurseFields(fields1, fields2, path).map(optObj)
+    }
 
-Map(
-  "firstName" -> string,
-  "gasReading" -> optObj(Map("date" -> string, "amount" -> string))
-)
- */
+    def bothObjs: PartialFunction[(RequiredTemplateData, RequiredTemplateData, Vector[String]), ErrorsOr[RequiredTemplateData]] = {
+      case (objs(fields1), objs(fields2), path) => recurseFields(fields1, fields2, path).map(objs)
+    }
+
+    def run(a: RequiredTemplateData, b: RequiredTemplateData, path: Vector[String]): ErrorsOr[RequiredTemplateData] = {
+      (sameSimpleType orElse bothObj orElse bothOptObj orElse bothObjs).applyOrElse(
+        (a, b, path),
+        default = (_: Any) => invalid(a, b, path)
+      )
+    }
+
+    run(fst, snd, Vector.empty)
+  }
+
+}
+
+
