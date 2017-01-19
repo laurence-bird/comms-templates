@@ -11,8 +11,9 @@ libraryDependencies ++= Seq(
   "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5-SNAPSHOT" % Test
 )
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaCheck,
-  "-maxSize", "4",
+  "-minSize", "1",
+  "-maxSize", "5",
   "-minSuccessfulTests", "100",
   "-maxDiscardRatio", "5",
-  "-workers", "4"
+  "-workers", "1"
 )
