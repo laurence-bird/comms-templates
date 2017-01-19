@@ -1,10 +1,18 @@
 scalaVersion := "2.11.8"
 
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
+resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "0.8.1",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "com.ovoenergy" %% "comms-kafka-messages" % "0.0.29",
   "org.parboiled" %% "parboiled" % "2.1.3",
-  "org.scalatest" %% "scalatest" % "3.0.1"
+  "org.scalatest" %% "scalatest" % "3.0.1" % Test,
+  "com.github.alexarchambault" %% "scalacheck-shapeless_1.13" % "1.1.5-SNAPSHOT" % Test
+)
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaCheck,
+  "-maxSize", "4",
+  "-minSuccessfulTests", "100",
+  "-maxDiscardRatio", "5",
+  "-workers", "4"
 )
