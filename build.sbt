@@ -12,8 +12,8 @@ libraryDependencies ++= Seq(
 )
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaCheck,
   "-minSize", "1",
-  "-maxSize", "5",
+  "-maxSize", "3",
   "-minSuccessfulTests", "100",
-  "-maxDiscardRatio", "5",
+  "-maxDiscardRatio", "10",
   "-workers", "1"
 )

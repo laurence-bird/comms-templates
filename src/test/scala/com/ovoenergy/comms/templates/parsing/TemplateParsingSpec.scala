@@ -405,6 +405,54 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
     testInvalid(input)
   }
 
+  it should "parse an if inside an each" in {
+    val input =
+      """
+        |{{#each orders }}
+        |  {{#if this.amount }} {{ this.amount }}{{/if}}
+        |{{/each}}
+      """.stripMargin
+    testValid(input, Map(
+      "orders" -> objs(Map(
+        "amount" -> optString))
+    ))
+  }
+
+  it should "correctly parse this case that scalacheck found" in {
+    val input =
+      """
+        |{{#if wo }}
+        |  {{#if wo.rirea }} {{ wo.rirea }} {{/if}}
+        |  {{#each wo.udavw }}
+        |    {{#if this.oYm.z }} {{ this.oYm.z }} {{/if}}
+        |    {{ this.oYm.ug }}
+        |    {{#if this.Atjc }} {{ this.Atjc }} {{/if}}
+        |    {{#if this.lm.m }} {{ this.lm.m }} {{/if}}
+        |    {{#each this.lm.v }} {{ this }} {{/each}}
+        |    {{#each this.lm.y }} {{ this }} {{/each}}
+        |  {{/each}}
+        |  {{#if wo.zabrmp }} {{ wo.zabrmp }} {{/if}}
+        |  {{ wo.c }}
+        |  {{#if wo.gzcvp }} {{ wo.gzcvp }} {{/if}}
+        |{{/if}}
+      """.stripMargin
+    testValid(input, Map(
+      "wo" -> optObj(Map(
+        "rirea" -> optString,
+        "udavw" -> objs(Map(
+          "oYm" -> obj(Map(
+            "z" -> optString,
+            "ug" -> string)),
+          "Atjc" -> optString,
+          "lm" -> obj(Map(
+            "m" -> optString,
+            "v" -> strings,
+            "y" -> strings)))),
+        "zabrmp" -> optString,
+        "c" -> string,
+        "gzcvp" -> optString))))
+  }
+
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
     parseHandlebarsTemplate(input) should be(HandlebarsTemplate(input, Valid(obj(expected))))
 
