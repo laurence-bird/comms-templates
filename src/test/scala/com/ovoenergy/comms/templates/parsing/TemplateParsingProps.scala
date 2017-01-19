@@ -3,23 +3,42 @@ package com.ovoenergy.comms.templates.parsing
 import cats.data.Validated.Valid
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._
-import org.scalacheck.{Arbitrary, Gen, Properties, Shapeless}
-import org.scalacheck.Prop.{BooleanOperators, forAllNoShrink}
+import org.scalacheck.{Arbitrary, Gen, Properties}
+import org.scalacheck.Prop.forAllNoShrink
 import org.scalacheck.Shapeless._
+
+import scala.collection.immutable.Seq
+import scala.collection.JavaConverters._
 
 object TemplateParsingProps extends Properties("TemplateParsing") {
 
   implicit val arbitraryKey: Arbitrary[String] = Arbitrary(Gen.alphaStr.filter(_.nonEmpty))
 
+  implicit def arbitraryNonEmptyMap(implicit
+                                    rtd: Arbitrary[RequiredTemplateData])
+                                    : Arbitrary[Map[String, RequiredTemplateData]] = Arbitrary {
+    Gen.nonEmptyListOf(rtd.arbitrary).flatMap { (values: Seq[RequiredTemplateData]) =>
+      val gens: Seq[Gen[(String, RequiredTemplateData)]] = values.map { value =>
+        for {
+          k <- Gen.alphaStr.filter(_.nonEmpty)
+          v <- Gen.const(value)
+        } yield (k, v)
+      }
+      Gen.sequence(gens).map(_.asScala.toList.toMap)
+    }
+  }
+
   property("parses valid trees correctly") =
     forAllNoShrink { (tree: obj) =>
-      freeFromEmptyMaps(tree) ==> {
-        val input = genHandlebarsTemplate(tree, Vector.empty)
+      val input = genHandlebarsTemplate(tree, Vector.empty)
+      val success =
+        TemplateParsing.parseHandlebarsTemplate(input).requiredData == Valid(tree)
+      if (!success) {
         println(s"$input ->")
         println(s"  ${TemplateParsing.parseHandlebarsTemplate(input).requiredData}")
         println()
-        TemplateParsing.parseHandlebarsTemplate(input).requiredData == Valid(tree)
       }
+      success
     }
 
   def freeFromEmptyMaps(tree: RequiredTemplateData): Boolean = tree match {
