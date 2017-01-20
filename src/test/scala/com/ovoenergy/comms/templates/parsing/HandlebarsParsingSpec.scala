@@ -4,9 +4,11 @@ import cats.data.Validated.Valid
 import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData}
 import org.scalatest._
 
-class TemplateParsingSpec extends FlatSpec with Matchers {
-  import TemplateParsing._
+class HandlebarsParsingSpec extends FlatSpec with Matchers {
+  import HandlebarsParsing._
   import RequiredTemplateData._
+
+  behavior of "#buildRequiredTemplateData"
 
   it should "successfully parse an empty template" in {
     val input = ""
@@ -454,9 +456,9 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
   }
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
-    parseHandlebarsTemplate(input) should be(HandlebarsTemplate(input, Valid(obj(expected))))
+    buildRequiredTemplateData(input) should be(Valid(obj(expected)))
 
   private def testInvalid(input: String) =
-    parseHandlebarsTemplate(input).requiredData should be('Invalid)
+    buildRequiredTemplateData(input) should be('Invalid)
 
 }

@@ -10,7 +10,7 @@ import org.scalacheck.Shapeless._
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 
-object TemplateParsingProps extends Properties("TemplateParsing") {
+object HandlebarsParsingProps extends Properties("HandlebarsParsing") {
 
   implicit val arbitraryKey: Arbitrary[String] = Arbitrary(Gen.alphaStr.filter(_.nonEmpty))
 
@@ -32,10 +32,10 @@ object TemplateParsingProps extends Properties("TemplateParsing") {
     forAllNoShrink { (tree: obj) =>
       val input = genHandlebarsTemplate(tree, Vector.empty)
       val success =
-        TemplateParsing.parseHandlebarsTemplate(input).requiredData == Valid(tree)
+        HandlebarsParsing.buildRequiredTemplateData(input) == Valid(tree)
       if (!success) {
         println(s"$input ->")
-        println(s"  ${TemplateParsing.parseHandlebarsTemplate(input).requiredData}")
+        println(s"  ${HandlebarsParsing.buildRequiredTemplateData(input)}")
         println()
       }
       success
