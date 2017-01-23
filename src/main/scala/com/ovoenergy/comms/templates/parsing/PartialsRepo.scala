@@ -5,6 +5,6 @@ import com.ovoenergy.comms.templates.model.TemplateFile
 
 trait PartialsRepo {
 
-  def getSharedPartial(referringFile: TemplateFile, partialName: String): ErrorsOr[String]
+  def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String]
 
 }
