@@ -468,6 +468,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers {
 
 
   it should "resolve partials with partials" in {
+
     object partialsRepo extends PartialsRepo {
       val responses: Map[String, Either[String, String]] = Map(
         "a.partial" -> Right("This partial has another partial: {{>  another.partial}}"),
@@ -481,7 +482,9 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers {
     resolvePartials(templateFile, partialsRepo) shouldBe Right("This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
   }
 
+
   it should "handle partial repo failures" in {
+
     object partialsRepo extends PartialsRepo {
       def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
         Left("An error")
