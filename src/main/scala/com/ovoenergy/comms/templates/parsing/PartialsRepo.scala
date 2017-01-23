@@ -6,5 +6,4 @@ trait PartialsRepo {
 
   def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String]
 
-
 }
