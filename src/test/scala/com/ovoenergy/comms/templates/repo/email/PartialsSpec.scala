@@ -2,6 +2,7 @@ package com.ovoenergy.comms.templates.repo.email
 
 import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
 import com.ovoenergy.comms.templates.model.{FileFormat, TemplateFile}
+import com.ovoenergy.comms.templates.repo.Partials
 import com.ovoenergy.comms.templates.s3.S3Client
 import org.scalatest.{EitherValues, FlatSpec, Matchers}
 

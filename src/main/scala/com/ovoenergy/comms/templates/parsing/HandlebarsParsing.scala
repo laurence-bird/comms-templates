@@ -64,7 +64,7 @@ object HandlebarsParsing {
   private def checkTemplateCompiles(input: String): Either[String, Unit] = {
     try {
       new Handlebars().compileInline(input)
-      Right(Unit)
+      Right(())
     } catch {
       case NonFatal(e) => Left(s"Error compiling template: ${e.getMessage}")
     }
