@@ -1,12 +1,19 @@
 package com.ovoenergy.comms.templates.parsing
 
 import cats.data.Validated.Valid
-import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData}
+import com.ovoenergy.comms.model.Channel.Email
+import com.ovoenergy.comms.model.CommType.Service
+import com.ovoenergy.comms.templates.model.FileFormat.Html
+import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData, TemplateFile}
 import org.scalatest._
 
-class TemplateParsingSpec extends FlatSpec with Matchers {
-  import TemplateParsing._
+import scala.collection.mutable
+
+class HandlebarsParsingSpec extends FlatSpec with Matchers {
+  import HandlebarsParsing._
   import RequiredTemplateData._
+
+  behavior of "#buildRequiredTemplateData"
 
   it should "successfully parse an empty template" in {
     val input = ""
@@ -454,9 +461,37 @@ class TemplateParsingSpec extends FlatSpec with Matchers {
   }
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
-    parseHandlebarsTemplate(input) should be(HandlebarsTemplate(input, Valid(obj(expected))))
+    buildRequiredTemplateData(input) should be(Valid(obj(expected)))
 
   private def testInvalid(input: String) =
-    parseHandlebarsTemplate(input).requiredData should be('Invalid)
+    buildRequiredTemplateData(input) should be('Invalid)
+
+
+  it should "resolve partials with partials" in {
+
+    object partialsRepo extends PartialsRepo {
+      val responses: Map[String, Either[String, String]] = Map(
+        "a.partial" -> Right("This partial has another partial: {{>  another.partial}}"),
+        "another.partial" -> Right("The other partial"),
+        "final.partial" -> Right("The final partial"))
+      def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
+        responses.getOrElse(partialName, Left("Non mapped response"))
+      }
+    }
+    val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial  }}. And a partial at the end: {{>final.partial}}")
+    resolvePartials(templateFile, partialsRepo) shouldBe Right("This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
+  }
+
+
+  it should "handle partial repo failures" in {
+
+    object partialsRepo extends PartialsRepo {
+      def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
+        Left("An error")
+      }
+    }
+    val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial}}")
+    resolvePartials(templateFile, partialsRepo) shouldBe Left("An error")
+  }
 
 }
