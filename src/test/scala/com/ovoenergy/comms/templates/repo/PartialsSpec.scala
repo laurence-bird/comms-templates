@@ -1,8 +1,7 @@
-package com.ovoenergy.comms.templates.repo.email
+package com.ovoenergy.comms.templates.repo
 
-import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
+import com.ovoenergy.comms.model.{Channel, CommType}
 import com.ovoenergy.comms.templates.model.{FileFormat, TemplateFile}
-import com.ovoenergy.comms.templates.repo.Partials
 import com.ovoenergy.comms.templates.s3.S3Client
 import org.scalatest.{EitherValues, FlatSpec, Matchers}
 
@@ -34,7 +33,7 @@ class PartialsSpec extends FlatSpec
 
   val testObj = new Partials(s3client)
 
-  behavior of "Email Partials Repo"
+  behavior of "Partials Repo for emails"
 
   it should "get html partials" in {
     testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header").right.value shouldBe "the HTML header"
