@@ -36,7 +36,7 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     * @param rawExpandedContent The raw content of the Handlebars template,
     *                           with all partials recursively resolved and expanded.
     */
-  def buildRequiredTemplateData(rawExpandedContent: String): ErrorsOr[RequiredTemplateData.obj] = {
+  private[handlebars] def buildRequiredTemplateData(rawExpandedContent: String): ErrorsOr[RequiredTemplateData.obj] = {
     val parser = new HandlebarsASTParser(rawExpandedContent)
 
     parser.WholeTemplate.run() match {
@@ -49,7 +49,7 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     }
   }
 
-  def resolvePartials(templateFile: TemplateFile): Either[String, String] = {
+  private[handlebars] def resolvePartials(templateFile: TemplateFile): Either[String, String] = {
     def retrieveAndReplacePartial(templateContent: String, templateFile: TemplateFile): Either[String, String] = {
       partialsRegex.findFirstMatchIn(templateContent).map(_.group(1)) match {
         case Some(partialName) =>
@@ -64,7 +64,7 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     retrieveAndReplacePartial(templateFile.content, templateFile)
   }
 
-  private def checkTemplateCompiles(input: String): Either[String, Unit] = {
+  private[handlebars] def checkTemplateCompiles(input: String): Either[String, Unit] = {
     try {
       new Handlebars().compileInline(input)
       Right(())

@@ -10,8 +10,11 @@ import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.template.files.email.EmailTemplateFiles
 import com.ovoenergy.comms.templates.retriever.TemplatesRetriever
 import com.ovoenergy.comms.templates.s3.S3Client
+import org.slf4j.LoggerFactory
 
 class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever[EmailTemplateFiles] {
+
+  private val log = LoggerFactory.getLogger("TemplatesS3Retriever")
 
   private object Filenames {
     object Email {
@@ -27,6 +30,7 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever[EmailT
       s3Client.getUTF8TextFileContent(emailTemplateFileKey(Channel.Email, commManifest, filename))
 
     if (s3Client.listFiles(templatePrefix(Channel.Email, commManifest)).isEmpty) {
+      log.info(s"No email template found for $commManifest")
       None
     } else {
       val subject: ErrorsOr[TemplateFile] =
@@ -57,10 +61,5 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever[EmailT
 
   private def emailTemplateFileKey(channel: Channel, commManifest: CommManifest, filename: String): String =
     s"${templatePrefix(channel, commManifest)}/$filename"
-
-
-
-
-
 
 }

@@ -1,22 +1,30 @@
 package com.ovoenergy.comms.templates
 
 import cats.Id
+import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import com.ovoenergy.comms.model.CommManifest
 import com.ovoenergy.comms.templates.model.EmailSender
 import com.ovoenergy.comms.templates.model.template.processed.CommTemplate
 import com.ovoenergy.comms.templates.model.template.processed.email.EmailTemplate
+import org.slf4j.LoggerFactory
 
 import scala.language.higherKinds
 
 object TemplatesRepo {
 
+  private val log = LoggerFactory.getLogger("TemplatesRepo")
+
   def getTemplate(context: TemplatesContext, commManifest: CommManifest): Option[CommTemplate[ErrorsOr]] = {
     val commTemplate = CommTemplate[ErrorsOr](
       email = getEmailTemplate(context, commManifest)
     )
-    if (isValidTemplate(commTemplate)) Some(commTemplate)
-    else None
+    validateTemplate(commTemplate) match {
+      case Valid(_)  => Some(commTemplate)
+      case Invalid(e) =>
+        log.warn(s"Template invalid: ${e.toList.mkString(",")}")
+        None
+    }
   }
 
   private def getEmailTemplate(context: TemplatesContext, commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
@@ -32,8 +40,9 @@ object TemplatesRepo {
     }
   }
 
-  private def isValidTemplate[A[_]](commTemplate: CommTemplate[A]) = {
+  private def validateTemplate[A[_]](commTemplate: CommTemplate[A]): ErrorsOr[_] = {
     //At least one channel
-    commTemplate.email.isDefined
+   if (commTemplate.email.isEmpty) Invalid(NonEmptyList.of("Template has no channels defined"))
+   else Valid(())
   }
 }

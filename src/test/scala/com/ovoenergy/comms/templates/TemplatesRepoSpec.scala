@@ -3,6 +3,7 @@ package com.ovoenergy.comms.templates
 import cats.Id
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
+import cats.scalatest.ValidatedMatchers
 import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
 import com.ovoenergy.comms.templates.model.RequiredTemplateData.{obj, string}
 import com.ovoenergy.comms.templates.model.{FileFormat, HandlebarsTemplate, RequiredTemplateData}
@@ -15,7 +16,8 @@ import com.ovoenergy.comms.templates.retriever.TemplatesRetriever
 import org.scalatest.{FlatSpec, Matchers}
 
 class TemplatesRepoSpec extends FlatSpec
-  with Matchers {
+  with Matchers
+  with ValidatedMatchers{
 
   object NoOpParsing extends Parsing[HandlebarsTemplate] {
     override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
@@ -46,7 +48,8 @@ class TemplatesRepoSpec extends FlatSpec
         Some(Invalid(NonEmptyList.of("Some error retrieving template")))
       }
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest).get.email shouldBe Some(Invalid(NonEmptyList.of("Some error retrieving template")))
+    val commTemplate = TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest).get
+    commTemplate.email.get should haveInvalid("Some error retrieving template")
   }
 
   it should "handle errors parsing email template" in {
@@ -72,7 +75,8 @@ class TemplatesRepoSpec extends FlatSpec
         }
       }
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest).get.email shouldBe Some(Invalid(NonEmptyList.of("Error parsing subject", "Error parsing htmlBody")))
+    val commTemplate = TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest).get
+    commTemplate.email.get should (haveInvalid("Error parsing subject") and haveInvalid("Error parsing htmlBody"))
   }
 
   it should "process valid email template" in {

@@ -34,14 +34,14 @@ class PartialsS3RetrieverSpec extends FlatSpec
 
   val testObj = new PartialsS3Retriever(s3client)
 
-  behavior of "Partials Repo fro emails"
+  behavior of "Partials Repo for emails"
 
   it should "get html partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header").right.value shouldBe "the HTML header"
+    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header") shouldBe Right("the HTML header")
   }
 
   it should "get text partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "header").right.value shouldBe "the text header"
+    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "header") shouldBe Right("the text header")
   }
 
   it should "fail if partial not present" in {

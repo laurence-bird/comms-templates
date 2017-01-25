@@ -1,10 +1,9 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.Validated.Valid
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
-import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsing
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalacheck.{Arbitrary, Gen, Properties}
 import org.scalacheck.Prop.forAllNoShrink

@@ -1,4 +1,4 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.Validated.Valid
 import com.ovoenergy.comms.model.Channel.Email
@@ -6,14 +6,12 @@ import com.ovoenergy.comms.model.CommType.Service
 import com.ovoenergy.comms.templates.model.FileFormat.Html
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
-import com.ovoenergy.comms.templates.parsing.HandlebarsParsingProps.noOpPartialsRetriever
-import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsing
+import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsingProps.noOpPartialsRetriever
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalatest._
 
 class HandlebarsParsingSpec extends FlatSpec
-  with Matchers
-  with EitherValues {
+  with Matchers {
   import RequiredTemplateData._
 
   behavior of "#buildRequiredTemplateData"
@@ -483,7 +481,7 @@ class HandlebarsParsingSpec extends FlatSpec
       }
     }
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial  }}. And a partial at the end: {{>final.partial}}")
-    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile).right.value shouldBe "This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial"
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Right("This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
   }
 
   it should "handle partial repo failures" in {
@@ -493,12 +491,12 @@ class HandlebarsParsingSpec extends FlatSpec
       }
     }
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial}}")
-    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile).left.value shouldBe "An error"
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Left("An error")
   }
 
   it should "ignore partials with only single curly braces" in {
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a dodgy partial: {> a.partial}")
-    new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile).right.value shouldBe "This template contains a dodgy partial: {> a.partial}"
+    new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile) shouldBe Right("This template contains a dodgy partial: {> a.partial}")
   }
 
 }
