@@ -1,9 +1,10 @@
-package com.ovoenergy.comms.templates.model
+package com.ovoenergy.comms.templates.model.template.processed.email
 
-import cats.{Applicative, Id}
 import cats.instances.option._
-import cats.syntax.traverse._
 import cats.syntax.cartesian._
+import cats.syntax.traverse._
+import cats.{Applicative, Id}
+import com.ovoenergy.comms.templates.model.{EmailSender, HandlebarsTemplate}
 
 import scala.language.higherKinds
 

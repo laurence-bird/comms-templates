@@ -3,6 +3,9 @@ package com.ovoenergy.comms.templates.parsing
 import cats.data.Validated.Valid
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._
+import com.ovoenergy.comms.templates.model.template.files.TemplateFile
+import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsing
+import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalacheck.{Arbitrary, Gen, Properties}
 import org.scalacheck.Prop.forAllNoShrink
 import org.scalacheck.Shapeless._
@@ -28,14 +31,20 @@ object HandlebarsParsingProps extends Properties("HandlebarsParsing") {
     }
   }
 
+  object noOpPartialsRetriever extends PartialsRetriever {
+    def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
+      Left("An error")
+    }
+  }
+
   property("parses valid trees correctly") =
     forAllNoShrink { (tree: obj) =>
       val input = genHandlebarsTemplate(tree, Vector.empty)
       val success =
-        HandlebarsParsing.buildRequiredTemplateData(input) == Valid(tree)
+        new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) == Valid(tree)
       if (!success) {
         println(s"$input ->")
-        println(s"  ${HandlebarsParsing.buildRequiredTemplateData(input)}")
+        println(s"  ${new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input)}")
         println()
       }
       success

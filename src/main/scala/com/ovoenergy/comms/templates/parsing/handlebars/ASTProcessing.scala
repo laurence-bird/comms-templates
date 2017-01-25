@@ -1,11 +1,11 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 
 private[parsing] object ASTProcessing {
-  import IntermediateAST._
   import HandlebarsAST._
+  import IntermediateAST._
 
   private case class Context(root: Obj)
 
