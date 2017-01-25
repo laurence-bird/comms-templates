@@ -1,11 +1,12 @@
-package com.ovoenergy.comms.templates.repo
+package com.ovoenergy.comms.templates.retriever
 
 import com.ovoenergy.comms.model.{Channel, CommType}
-import com.ovoenergy.comms.templates.model.{FileFormat, TemplateFile}
+import com.ovoenergy.comms.templates.model.FileFormat
+import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.s3.S3Client
 import org.scalatest.{EitherValues, FlatSpec, Matchers}
 
-class PartialsSpec extends FlatSpec
+class PartialsS3RetrieverSpec extends FlatSpec
   with Matchers
   with EitherValues {
 
@@ -31,16 +32,16 @@ class PartialsSpec extends FlatSpec
     )
   )
 
-  val testObj = new Partials(s3client)
+  val testObj = new PartialsS3Retriever(s3client)
 
   behavior of "Partials Repo for emails"
 
   it should "get html partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header").right.value shouldBe "the HTML header"
+    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header") shouldBe Right("the HTML header")
   }
 
   it should "get text partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "header").right.value shouldBe "the text header"
+    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "header") shouldBe Right("the text header")
   }
 
   it should "fail if partial not present" in {

@@ -1,8 +1,9 @@
-package com.ovoenergy.comms.templates.model
+package com.ovoenergy.comms.templates.model.template.processed
 
-import cats.{Applicative, Apply, Id}
 import cats.instances.option._
 import cats.syntax.traverse._
+import cats.{Applicative, Apply, Id}
+import com.ovoenergy.comms.templates.model.template.processed.email.EmailTemplate
 
 import scala.language.higherKinds
 

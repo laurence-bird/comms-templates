@@ -1,10 +1,9 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
-import cats.syntax.traverse._
 import cats.instances.map._
-
+import cats.syntax.traverse._
 import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._

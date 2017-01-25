@@ -1,4 +1,4 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import org.parboiled2._
 

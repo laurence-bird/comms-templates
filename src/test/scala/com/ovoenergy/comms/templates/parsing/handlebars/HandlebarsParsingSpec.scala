@@ -1,16 +1,17 @@
-package com.ovoenergy.comms.templates.parsing
+package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.Validated.Valid
 import com.ovoenergy.comms.model.Channel.Email
 import com.ovoenergy.comms.model.CommType.Service
 import com.ovoenergy.comms.templates.model.FileFormat.Html
-import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData, TemplateFile}
+import com.ovoenergy.comms.templates.model.RequiredTemplateData
+import com.ovoenergy.comms.templates.model.template.files.TemplateFile
+import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsingProps.noOpPartialsRetriever
+import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalatest._
 
-import scala.collection.mutable
-
-class HandlebarsParsingSpec extends FlatSpec with Matchers {
-  import HandlebarsParsing._
+class HandlebarsParsingSpec extends FlatSpec
+  with Matchers {
   import RequiredTemplateData._
 
   behavior of "#buildRequiredTemplateData"
@@ -460,16 +461,17 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers {
         "gzcvp" -> optString))))
   }
 
-  private def testValid(input: String, expected: Map[String, RequiredTemplateData]) =
-    buildRequiredTemplateData(input) should be(Valid(obj(expected)))
+  private def testValid(input: String, expected: Map[String, RequiredTemplateData]) = {
+    new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) should be(Valid(obj(expected)))
+  }
 
-  private def testInvalid(input: String) =
-    buildRequiredTemplateData(input) should be('Invalid)
-
+  private def testInvalid(input: String) = {
+    new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) should be('Invalid)
+  }
 
   it should "resolve partials with partials" in {
 
-    object partialsRepo extends PartialsRepo {
+    object partialsRetriever extends PartialsRetriever {
       val responses: Map[String, Either[String, String]] = Map(
         "a.partial" -> Right("This partial has another partial: {{>  another.partial}}"),
         "another.partial" -> Right("The other partial"),
@@ -479,19 +481,32 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers {
       }
     }
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial  }}. And a partial at the end: {{>final.partial}}")
-    resolvePartials(templateFile, partialsRepo) shouldBe Right("This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Right("This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
   }
 
-
   it should "handle partial repo failures" in {
-
-    object partialsRepo extends PartialsRepo {
+    object partialsRetriever extends PartialsRetriever {
       def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
         Left("An error")
       }
     }
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial}}")
-    resolvePartials(templateFile, partialsRepo) shouldBe Left("An error")
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Left("An error")
+  }
+
+  it should "ignore partials with only single curly braces" in {
+    val templateFile = TemplateFile(Service, Email, Html, "This template contains a dodgy partial: {> a.partial}")
+    new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile) shouldBe Right("This template contains a dodgy partial: {> a.partial}")
+  }
+
+  it should "reject templates that are not valid handlebars syntax" in {
+    val invalidHandlebarsHTML = "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}</div>\\n</body>\\n</html>\""
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Left)
+  }
+
+  it should "correctly valid templates that are valid handlebars syntax" in {
+    val invalidHandlebarsHTML = "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}}</div>\\n</body>\\n</html>\""
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Right)
   }
 
 }

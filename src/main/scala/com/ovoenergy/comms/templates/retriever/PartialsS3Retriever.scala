@@ -1,10 +1,9 @@
-package com.ovoenergy.comms.templates.repo
+package com.ovoenergy.comms.templates.retriever
 
-import com.ovoenergy.comms.templates.model.TemplateFile
-import com.ovoenergy.comms.templates.parsing.PartialsRepo
+import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.s3.S3Client
 
-class Partials(s3client: S3Client) extends PartialsRepo {
+class PartialsS3Retriever(s3client: S3Client) extends PartialsRetriever {
 
   def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
     val channel = referringFile.channel.toString.toLowerCase
