@@ -499,4 +499,14 @@ class HandlebarsParsingSpec extends FlatSpec
     new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile) shouldBe Right("This template contains a dodgy partial: {> a.partial}")
   }
 
+  it should "reject templates that are not valid handlebars syntax" in {
+    val invalidHandlebarsHTML = "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}</div>\\n</body>\\n</html>\""
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Left)
+  }
+
+  it should "correctly valid templates that are valid handlebars syntax" in {
+    val invalidHandlebarsHTML = "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}}</div>\\n</body>\\n</html>\""
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Right)
+  }
+
 }
