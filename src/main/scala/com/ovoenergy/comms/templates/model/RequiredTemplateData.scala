@@ -25,7 +25,14 @@ object RequiredTemplateData {
     * Combine two trees into one, returning errors for any conflicts,
     * i.e. if the same node being referenced as two different types.
     */
-  def combine(fst: RequiredTemplateData, snd: RequiredTemplateData): ErrorsOr[RequiredTemplateData] = {
+  def combine(requiredTemplateDatas: List[RequiredTemplateData.obj]): ErrorsOr[RequiredTemplateData.obj] = {
+    requiredTemplateDatas.foldLeft[ErrorsOr[RequiredTemplateData.obj]](Valid(RequiredTemplateData.obj(Map()))){
+      case (Valid(requireData), x)  => combine2(requireData, x)
+      case (invalid, _)             => invalid
+    }
+  }
+
+  private def combine2(fst: RequiredTemplateData.obj, snd: RequiredTemplateData.obj): ErrorsOr[RequiredTemplateData.obj] = {
     def invalid(a: RequiredTemplateData, b: RequiredTemplateData, path: Vector[String]): ErrorsOr[RequiredTemplateData] =
       Invalid(NonEmptyList.of(
         s"${path.mkString(".")} is referenced as both ${a.description} and ${b.description}}"
@@ -68,7 +75,7 @@ object RequiredTemplateData {
       )
     }
 
-    run(fst, snd, Vector.empty)
+    recurseFields(fst.fields, snd.fields, Vector.empty).map(obj)
   }
 
 }
