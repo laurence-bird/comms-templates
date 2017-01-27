@@ -1,6 +1,6 @@
 package com.ovoenergy.comms.templates.model
 
-import org.scalacheck.Properties
+import org.scalacheck.{Arbitrary, Gen, Properties}
 import org.scalacheck.Prop.{BooleanOperators, forAllNoShrink}
 import org.scalacheck.Shapeless._
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._
@@ -22,9 +22,11 @@ object RequiredTemplateDataProps extends Properties("RequiredTemplateData") {
 //      }
 //    }
 
+  implicit val arbitraryKey: Arbitrary[String] = Arbitrary(Gen.oneOf(Seq("A", "B")))
+
   property("does not combine conflicting trees") =
-    forAllNoShrink { (x: RequiredTemplateData, y: RequiredTemplateData) =>
-      val result = RequiredTemplateData.combine(x, y)
+    forAllNoShrink { (x: RequiredTemplateData.obj, y: RequiredTemplateData.obj) =>
+      val result = RequiredTemplateData.combine(List(x, y))
       result.isInvalid ==> isConflicting(x, y)
     }
 
