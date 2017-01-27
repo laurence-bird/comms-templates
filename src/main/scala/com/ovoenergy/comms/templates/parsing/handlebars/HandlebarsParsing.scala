@@ -19,7 +19,6 @@ import shapeless.LabelledGeneric
 import shapeless._
 import shapeless.ops.hlist.ToTraversable
 import shapeless.ops.record._
-import shapeless.tag.Tagged
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
@@ -27,10 +26,6 @@ import scala.util.{Failure, Success}
 class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
   private val partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
   private val providedDataKeys = Seq("system", "profile", "recipient")
-
-  object symbolName extends Poly1 {
-    implicit def atTaggedSymbol[T] = at[Symbol with Tagged[T]](_.name)
-  }
 
   def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
     eitherToErrorsOr {
