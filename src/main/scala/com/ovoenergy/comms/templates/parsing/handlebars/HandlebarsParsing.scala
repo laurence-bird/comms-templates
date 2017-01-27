@@ -15,10 +15,9 @@ import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplate
 import com.ovoenergy.comms.templates.parsing.Parsing
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.parboiled2._
-import org.slf4j.LoggerFactory
 import shapeless.LabelledGeneric
 import shapeless._
-import shapeless.ops.hlist.{Mapper, ToTraversable}
+import shapeless.ops.hlist.ToTraversable
 import shapeless.ops.record._
 import shapeless.tag.Tagged
 
@@ -26,8 +25,6 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
-
-  private def log = LoggerFactory.getLogger("HandlebarsParsing")
   private val partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
   private val providedDataKeys = Seq("system", "profile", "recipient")
 
@@ -118,7 +115,6 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
                                                               (implicit labelledGen: LabelledGeneric.Aux[T, R],
                                                                keysR: Keys.Aux[R, M],
                                                                trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[_] = {
-    object toName extends Poly1 { implicit def keyToName[A] = at[Symbol with A](_.name) }
 
     val keys = keysR.apply.toList.map(_.name)
     requiredData.fields.get(providedType) match {
