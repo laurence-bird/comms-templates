@@ -34,20 +34,20 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
         _ <- checkTemplateCompiles(contentIncludingPartials).right
       } yield {
         buildRequiredTemplateData(contentIncludingPartials) match {
-          case Valid(data) => HandlebarsTemplate(contentIncludingPartials, processRequiredDatas(data, templateFile))
+          case Valid(data) => HandlebarsTemplate(contentIncludingPartials, processProvidedDataFields(data, templateFile))
           case invalid     => HandlebarsTemplate(contentIncludingPartials, invalid)
         }
       }
     }
   }
 
-  private[handlebars] def processRequiredDatas(requiredData: RequiredTemplateData.obj, templateFile: TemplateFile): ErrorsOr[RequiredTemplateData.obj] = {
-    val systemValidations = validateProvidedDatas(requiredData, "system", classOf[System])
-    val profileValidations = validateProvidedDatas(requiredData, "profile", classOf[CustomerProfile])
+  private[handlebars] def processProvidedDataFields(requiredData: RequiredTemplateData.obj, templateFile: TemplateFile): ErrorsOr[RequiredTemplateData.obj] = {
+    val systemValidations = validateProvidedDataType(requiredData, "system", classOf[System])
+    val profileValidations = validateProvidedDataType(requiredData, "profile", classOf[CustomerProfile])
 
     val channelSpecificValidations = templateFile.channel match {
-      case Email  => validateProvidedDatas(requiredData, "recipient", classOf[EmailRecipient])
-      case SMS    => validateProvidedDatas(requiredData, "recipient", classOf[SMSRecipient])
+      case Email  => validateProvidedDataType(requiredData, "recipient", classOf[EmailRecipient])
+      case SMS    => validateProvidedDataType(requiredData, "recipient", classOf[SMSRecipient])
     }
 
     Apply[ErrorsOr].map3(systemValidations, profileValidations, channelSpecificValidations) {
@@ -106,10 +106,10 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     }
   }
 
-  private def validateProvidedDatas[T, R <: HList, M <: HList](requiredData: RequiredTemplateData.obj, providedType: String, clazz: Class[T])
+  private def validateProvidedDataType[T, R <: HList, M <: HList](requiredData: RequiredTemplateData.obj, providedType: String, clazz: Class[T])
                                                               (implicit labelledGen: LabelledGeneric.Aux[T, R],
                                                                keysR: Keys.Aux[R, M],
-                                                               trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[_] = {
+                                                               trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[Unit] = {
 
     val keys = keysR.apply.toList.map(_.name)
     requiredData.fields.get(providedType) match {
@@ -120,7 +120,7 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
           case (fieldName, _)                                                        => Some(s"$providedType.$fieldName is not a string")
         }.toList
         if (failures.nonEmpty) Invalid(NonEmptyList.fromListUnsafe(failures))
-        else Valid()
+        else Valid(())
       case Some(otherType)    => Invalid(NonEmptyList.of(s"$providedType property incorrect type"))
       case None               => Valid(())
     }
