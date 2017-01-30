@@ -2,6 +2,8 @@
 
 [![CircleCI](https://circleci.com/gh/ovotech/comms-templates.svg?style=svg)](https://circleci.com/gh/ovotech/comms-templates)
 
+[![Download](https://api.bintray.com/packages/ovotech/maven/comms-templates/images/download.svg)](https://bintray.com/ovotech/maven/comms-templates/_latestVersion)
+
 ## What is a comms Template?
 
 A template consists of all the artifacts required the build a communication, across all channels (email, sms, etc), to send to a recipient.
