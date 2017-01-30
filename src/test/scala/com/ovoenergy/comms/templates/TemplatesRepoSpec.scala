@@ -39,7 +39,7 @@ class TemplatesRepoSpec extends FlatSpec
         None
       }
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest) shouldBe None
+    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest) should haveInvalid("Template has no channels defined")
   }
 
   it should "handle errors retrieving email template" in {
@@ -48,8 +48,7 @@ class TemplatesRepoSpec extends FlatSpec
         Some(Invalid(NonEmptyList.of("Some error retrieving template")))
       }
     }
-    val commTemplate = TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest).get
-    commTemplate.email.get should haveInvalid("Some error retrieving template")
+    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, NoOpParsing), commManifest) should haveInvalid("Some error retrieving template")
   }
 
   it should "handle errors parsing email template" in {
@@ -75,8 +74,7 @@ class TemplatesRepoSpec extends FlatSpec
         }
       }
     }
-    val commTemplate = TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest).get
-    commTemplate.email.get should (haveInvalid("Error parsing subject") and haveInvalid("Error parsing htmlBody"))
+    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest) should (haveInvalid("Error parsing subject") and haveInvalid("Error parsing htmlBody"))
   }
 
   it should "process valid email template" in {
@@ -107,10 +105,10 @@ class TemplatesRepoSpec extends FlatSpec
       }
     }
 
-    val exp = CommTemplate[ErrorsOr](
-      email = Some(Valid(EmailTemplate[Id](parsedSubject, parsedHtmlBody, Some(parsedOther), None)))
+    val exp = CommTemplate[Id](
+      email = Some(EmailTemplate[Id](parsedSubject, parsedHtmlBody, Some(parsedOther), None))
     )
-    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest) shouldBe Some(exp)
+    TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest) shouldBe Valid(exp)
   }
 
 

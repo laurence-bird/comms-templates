@@ -15,15 +15,13 @@ object TemplatesRepo {
 
   private val log = LoggerFactory.getLogger("TemplatesRepo")
 
-  def getTemplate(context: TemplatesContext, commManifest: CommManifest): Option[CommTemplate[ErrorsOr]] = {
+  def getTemplate(context: TemplatesContext, commManifest: CommManifest): ErrorsOr[CommTemplate[Id]] = {
     val commTemplate = CommTemplate[ErrorsOr](
       email = getEmailTemplate(context, commManifest)
     )
     validateTemplate(commTemplate) match {
-      case Valid(_)  => Some(commTemplate)
-      case Invalid(e) =>
-        log.warn(s"Template invalid: ${e.toList.mkString(",")}")
-        None
+      case Valid(_)   => commTemplate.aggregate
+      case Invalid(e) => Invalid(e)
     }
   }
 
@@ -40,7 +38,7 @@ object TemplatesRepo {
     }
   }
 
-  private def validateTemplate[A[_]](commTemplate: CommTemplate[A]): ErrorsOr[_] = {
+  private def validateTemplate[A[_]](commTemplate: CommTemplate[A]): ErrorsOr[Unit] = {
     //At least one channel
    if (commTemplate.email.isEmpty) Invalid(NonEmptyList.of("Template has no channels defined"))
    else Valid(())

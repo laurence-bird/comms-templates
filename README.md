@@ -47,11 +47,12 @@ object Example extends App {
   val manifest = CommManifest(CommType.Service, "cc-payment-taken", "0.3")
 
   TemplatesRepo.getTemplate(context, manifest) match {
-    case None           => println(s"No template was found for manifest $manifest")
-    case Some(template) => template.combineRequiredData match {
-      case Valid(Valid(data)) => println(s"The required data for the template is $data")
-      case invalid            => println(s"Errors found in required data $invalid")
-    }
+    case Valid(template) =>
+      template.combineRequiredData match {
+        case Valid(data) => println(s"The required data for the template is $data")
+        case invalid     => println(s"Errors found in the required data $invalid")
+      }
+    case invalid => println(s"The template has errors $invalid")
   }
 }
 ```
@@ -64,7 +65,9 @@ The required data for the template is obj(Map(currencySymbol -> string, amount -
 
 ## Errors
 
-The various aspects of the returned CommTemplate are wrapped by the ErrorsOr data type, which is just a type alias for the [Validated](http://eed3si9n.com/herding-cats/Validated.html) datatype provided by Cats. In this way the library is able to return as much information about template issues, rather than just failing fast.
+The various aspects of the returned CommTemplate are wrapped by the ErrorsOr data type, which is just a type alias for the [Validated](http://eed3si9n.com/herding-cats/Validated.html) datatype provided by Cats. 
+
+In this way the library is able to return as much information about template issues, concatenated into the ErrorsOr, rather than just failing fast
 
 ## How to use
 
