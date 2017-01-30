@@ -1,5 +1,9 @@
 scalaVersion := "2.11.8"
 
+bintrayOrganization := Some("ovotech")
+organization := "com.ovoenergy"
+licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
+
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
 libraryDependencies ++= Seq(
@@ -22,3 +26,10 @@ testOptions in Test += Tests.Argument(TestFrameworks.ScalaCheck,
   "-maxDiscardRatio", "10",
   "-workers", "1"
 )
+
+// Make ScalaTest write test reports that CirceCI understands
+val testReportsDir = sys.env.getOrElse("CI_REPORTS", "target/reports")
+testOptions += Tests.Argument(TestFrameworks.ScalaTest, "-o", "-u", testReportsDir)
+
+tutSettings
+tutTargetDirectory := baseDirectory.value
