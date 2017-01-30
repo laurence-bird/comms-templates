@@ -10,13 +10,13 @@ Templates are stored and versioned in S3, and are split by type (Service, Regula
  
 An example template in S3 could be made up of the following files:
 * Email:
-** Subject
-** Html Body
-** Text Body (optional)
-** Sender (optional)
+ ** Subject
+ ** Html Body
+ ** Text Body (optional)
+ ** Sender (optional)
 * SMS: (yet to be implemented)
-** Body
-** Sender (optional)
+ ** Body
+ ** Sender (optional)
  
 Each of these files contains a [handlebars template](http://handlebarsjs.com/expressions.html).
  
@@ -24,11 +24,11 @@ Each of these files contains a [handlebars template](http://handlebarsjs.com/exp
 
 This is a library that collects a comms Template from S3, returning the following:
 * The contents of each template artifact
-** Expanding out any references to [partials](http://handlebarsjs.com/partials.html)
-** Checking that the contents form a valid handlebars template
+  ** Expanding out any references to [partials](http://handlebarsjs.com/partials.html)
+  ** Checking that the contents form a valid handlebars template
 * The data required to fulfill the template 
-** Checking there are no inconsistencies, with the template identifiers, across all the template artifacts
-** Checking that the template identifiers, referencing data provided by the comms platform, are correct
+  ** Checking there are no inconsistencies, with the template identifiers, across all the template artifacts
+  ** Checking that the template identifiers, referencing data provided by the comms platform, are correct
 
 ## Example
 
@@ -64,7 +64,7 @@ The required data for the template is obj(Map(currencySymbol -> string, amount -
 
 ## Errors
 
-The various aspects of the returned CommTemplate are wrapped by the ErrorsOr data type, which is just a type alias for [Validated](http://eed3si9n.com/herding-cats/Validated.html) datatype provided by Cats. In this way the library is able to return as much information about template issues, rather than just failing fast.
+The various aspects of the returned CommTemplate are wrapped by the ErrorsOr data type, which is just a type alias for the [Validated](http://eed3si9n.com/herding-cats/Validated.html) datatype provided by Cats. In this way the library is able to return as much information about template issues, rather than just failing fast.
 
 ## How to use
 
