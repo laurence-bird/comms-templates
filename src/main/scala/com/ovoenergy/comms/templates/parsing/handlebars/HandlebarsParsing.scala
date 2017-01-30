@@ -1,21 +1,67 @@
 package com.ovoenergy.comms.templates.parsing.handlebars
 
+
+import cats.Apply
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import com.github.jknack.handlebars.Handlebars
-import com.ovoenergy.comms.templates.ErrorsOr
+import com.ovoenergy.comms.model.Channel.{Email, SMS}
+import com.ovoenergy.comms.model.CustomerProfile
+import com.ovoenergy.comms.templates.model.variables.{EmailRecipient, SMSRecipient, System}
+import com.ovoenergy.comms.templates._
+import com.ovoenergy.comms.templates.model.RequiredTemplateData.{obj, string}
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData}
 import com.ovoenergy.comms.templates.parsing.Parsing
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.parboiled2._
+import shapeless.LabelledGeneric
+import shapeless._
+import shapeless.ops.hlist.ToTraversable
+import shapeless.ops.record._
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
-class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
+object HandlebarsParsing {
+  private val providedDataKeys = Seq("system", "profile", "recipient")
 
-  def partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
+  private[handlebars] def processProvidedDataFields(requiredData: RequiredTemplateData.obj, templateFile: TemplateFile): ErrorsOr[RequiredTemplateData.obj] = {
+    val systemValidations = validateProvidedDataType(requiredData, "system", classOf[System])
+    val profileValidations = validateProvidedDataType(requiredData, "profile", classOf[CustomerProfile])
+
+    val channelSpecificValidations = templateFile.channel match {
+      case Email  => validateProvidedDataType(requiredData, "recipient", classOf[EmailRecipient])
+      case SMS    => validateProvidedDataType(requiredData, "recipient", classOf[SMSRecipient])
+    }
+
+    Apply[ErrorsOr].map3(systemValidations, profileValidations, channelSpecificValidations) {
+      case (_, _, _) => RequiredTemplateData.obj(requiredData.fields.filter(field => !providedDataKeys.contains(field._1)))
+    }
+  }
+
+  private def validateProvidedDataType[T, R <: HList, M <: HList](requiredData: RequiredTemplateData.obj, providedType: String, clazz: Class[T])
+                                                                 (implicit labelledGen: LabelledGeneric.Aux[T, R],
+                                                                  keysR: Keys.Aux[R, M],
+                                                                  trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[Unit] = {
+
+    val keys = keysR.apply.toList.map(_.name)
+    requiredData.fields.get(providedType) match {
+      case Some(obj(fields))  =>
+        val failures = fields.collect {
+          case (fieldName, RequiredTemplateData.string) if !keys.contains(fieldName) => s"$providedType.$fieldName is not a valid $providedType property field"
+          case (fieldName, data) if data != RequiredTemplateData.string              => s"$providedType.$fieldName is not a string"
+        }.toList
+        if (failures.nonEmpty) Invalid(NonEmptyList.fromListUnsafe(failures))
+        else Valid(())
+      case Some(otherType)    => Invalid(NonEmptyList.of(s"$providedType property incorrect type"))
+      case None               => Valid(())
+    }
+  }
+}
+
+class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
+  private val partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
 
   def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
     eitherToErrorsOr {
@@ -23,8 +69,10 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
         contentIncludingPartials <- resolvePartials(templateFile).right
         _ <- checkTemplateCompiles(contentIncludingPartials).right
       } yield {
-        val requiredData = buildRequiredTemplateData(contentIncludingPartials)
-        HandlebarsTemplate(contentIncludingPartials, requiredData)
+        buildRequiredTemplateData(contentIncludingPartials) match {
+          case Valid(data) => HandlebarsTemplate(contentIncludingPartials, HandlebarsParsing.processProvidedDataFields(data, templateFile))
+          case invalid     => HandlebarsTemplate(contentIncludingPartials, invalid)
+        }
       }
     }
   }
@@ -79,5 +127,6 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
       case Left(error)   => Invalid(NonEmptyList.of(error))
     }
   }
+
 
 }

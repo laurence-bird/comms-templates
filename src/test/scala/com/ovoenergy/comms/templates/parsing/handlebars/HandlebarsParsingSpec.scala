@@ -1,18 +1,26 @@
 package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.Validated.Valid
+import cats.scalatest.ValidatedMatchers
 import com.ovoenergy.comms.model.Channel.Email
+import com.ovoenergy.comms.model.{Channel, CommType}
 import com.ovoenergy.comms.model.CommType.Service
+import com.ovoenergy.comms.templates.model.variables.System
 import com.ovoenergy.comms.templates.model.FileFormat.Html
-import com.ovoenergy.comms.templates.model.RequiredTemplateData
+import com.ovoenergy.comms.templates.model.{FileFormat, HandlebarsTemplate, RequiredTemplateData}
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsingProps.noOpPartialsRetriever
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalatest._
+import shapeless.HList
+import RequiredTemplateData._
 
 class HandlebarsParsingSpec extends FlatSpec
-  with Matchers {
-  import RequiredTemplateData._
+  with Matchers
+  with ValidatedMatchers {
+
+  val emailTemplateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "")
+  val smsTemplateFile = TemplateFile(CommType.Service, Channel.SMS, FileFormat.Text, "")
 
   behavior of "#buildRequiredTemplateData"
 
@@ -509,4 +517,156 @@ class HandlebarsParsingSpec extends FlatSpec
     new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Right)
   }
 
+  it should "reject templates that references non-existent provided System parameter" in {
+    val reqData1 = obj(Map(
+      "system" -> obj(Map(
+        "date" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.date is not a valid system property field")
+  }
+
+  it should "reject templates that references provided System parameters with the wrong type" in {
+    val reqData1 = obj(Map(
+      "system" -> obj(Map(
+        "year" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.year is not a string")
+  }
+
+  it should "reject templates that references the provided System parameters as the wrong type" in {
+    val reqData1 = obj(Map(
+      "system" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided Profile parameter" in {
+    val reqData1 = obj(Map(
+      "profile" -> obj(Map(
+        "middleName" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.middleName is not a valid profile property field")
+  }
+
+  it should "reject templates that references provided Profile parameters with the wrong type" in {
+    val reqData1 = obj(Map(
+      "profile" -> obj(Map(
+        "firstName" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.firstName is not a string")
+  }
+
+  it should "reject templates that references the provided Profile parameters as the wrong type" in {
+    val reqData1 = obj(Map(
+      "profile" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided Email Recipient parameter" in {
+    val reqData1 = obj(Map(
+      "recipient" -> obj(Map(
+        "emailSomething" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailSomething is not a valid recipient property field")
+  }
+
+  it should "reject templates that references provided Email Recipient parameters with the wrong type" in {
+    val reqData1 = obj(Map(
+      "recipient" -> obj(Map(
+        "emailAddress" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailAddress is not a string")
+  }
+
+  it should "reject templates that references the provided Email Recipient parameters as the wrong type" in {
+    val reqData1 = obj(Map(
+      "recipient" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided SMS Recipient parameter" in {
+    val reqData1 = obj(Map(
+      "recipient" -> obj(Map(
+        "mobileNumber" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.mobileNumber is not a valid recipient property field")
+  }
+
+  it should "reject templates that references provided SMS Recipient parameters with the wrong type" in {
+    val reqData1 = obj(Map(
+      "recipient" -> obj(Map(
+        "telephoneNumber" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.telephoneNumber is not a string")
+  }
+
+  it should "reject templates that references the provided SMS Recipient parameters as the wrong type" in {
+    val reqData1 = obj(Map(
+      "recipient" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient property incorrect type")
+  }
+
+  it should "accept Email templates that correctly reference provided parameters" in {
+    val reqData1 = obj(Map(
+      "field1" -> string,
+      "system" -> obj(Map(
+        "month" -> string,
+        "dayOfMonth" -> string,
+        "year" -> string)),
+      "recipient" -> obj(Map(
+        "emailAddress" -> string)),
+      "profile" -> obj(Map(
+        "firstName" -> string,
+        "lastName" -> string))))
+
+    val result = obj(Map(
+      "field1" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) shouldBe Valid(result)
+  }
+
+  it should "accept SMS templates that correctly reference provided parameters" in {
+    val reqData1 = obj(Map(
+      "field1" -> string,
+      "system" -> obj(Map(
+        "month" -> string,
+        "dayOfMonth" -> string,
+        "year" -> string)),
+      "recipient" -> obj(Map(
+        "telephoneNumber" -> string)),
+      "profile" -> obj(Map(
+        "firstName" -> string,
+        "lastName" -> string))))
+
+    val result = obj(Map(
+      "field1" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) shouldBe Valid(result)
+  }
+
+  it should "do the whole thing" in {
+
+    val templateContent = "A load of variables {{profile.firstName}} {{system.year}} {{recipient.emailAddress}} {{field1}} {{field2.sub1}} {{> aPartial}}"
+
+    object partialsRetriever extends PartialsRetriever {
+      val responses: Map[String, Either[String, String]] = Map(
+        "aPartial" -> Right("A partial {{partialField}} {{profile.lastName}}"))
+      def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
+        responses.getOrElse(partialName, Left("Non mapped response"))
+      }
+    }
+    val templateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, templateContent)
+    new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should beValid(HandlebarsTemplate(
+      rawExpandedContent = "A load of variables {{profile.firstName}} {{system.year}} {{recipient.emailAddress}} {{field1}} {{field2.sub1}} A partial {{partialField}} {{profile.lastName}}",
+      requiredData = Valid(obj(Map(
+          "field1" -> string,
+          "partialField" -> string,
+          "field2" -> obj(Map(
+            "sub1" -> string))))
+      )
+    ))
+  }
 }
