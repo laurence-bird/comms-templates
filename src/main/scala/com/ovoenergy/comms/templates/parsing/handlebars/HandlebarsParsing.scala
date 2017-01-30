@@ -23,23 +23,8 @@ import shapeless.ops.record._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
-class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
-  private val partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
+object HandlebarsParsing {
   private val providedDataKeys = Seq("system", "profile", "recipient")
-
-  def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
-    eitherToErrorsOr {
-      for {
-        contentIncludingPartials <- resolvePartials(templateFile).right
-        _ <- checkTemplateCompiles(contentIncludingPartials).right
-      } yield {
-        buildRequiredTemplateData(contentIncludingPartials) match {
-          case Valid(data) => HandlebarsTemplate(contentIncludingPartials, processProvidedDataFields(data, templateFile))
-          case invalid     => HandlebarsTemplate(contentIncludingPartials, invalid)
-        }
-      }
-    }
-  }
 
   private[handlebars] def processProvidedDataFields(requiredData: RequiredTemplateData.obj, templateFile: TemplateFile): ErrorsOr[RequiredTemplateData.obj] = {
     val systemValidations = validateProvidedDataType(requiredData, "system", classOf[System])
@@ -52,6 +37,43 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
 
     Apply[ErrorsOr].map3(systemValidations, profileValidations, channelSpecificValidations) {
       case (_, _, _) => RequiredTemplateData.obj(requiredData.fields.filter(field => !providedDataKeys.contains(field._1)))
+    }
+  }
+
+  private def validateProvidedDataType[T, R <: HList, M <: HList](requiredData: RequiredTemplateData.obj, providedType: String, clazz: Class[T])
+                                                                 (implicit labelledGen: LabelledGeneric.Aux[T, R],
+                                                                  keysR: Keys.Aux[R, M],
+                                                                  trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[Unit] = {
+
+    val keys = keysR.apply.toList.map(_.name)
+    requiredData.fields.get(providedType) match {
+      case Some(obj(fields))  =>
+        val failures = fields.collect {
+          case (fieldName, RequiredTemplateData.string) if !keys.contains(fieldName) => s"$providedType.$fieldName is not a valid $providedType property field"
+          case (fieldName, data) if data != RequiredTemplateData.string              => s"$providedType.$fieldName is not a string"
+        }.toList
+        if (failures.nonEmpty) Invalid(NonEmptyList.fromListUnsafe(failures))
+        else Valid(())
+      case Some(otherType)    => Invalid(NonEmptyList.of(s"$providedType property incorrect type"))
+      case None               => Valid(())
+    }
+  }
+}
+
+class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[HandlebarsTemplate] {
+  private val partialsRegex = "\\{\\{> *([a-zA-Z._]+) *\\}\\}".r
+
+  def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
+    eitherToErrorsOr {
+      for {
+        contentIncludingPartials <- resolvePartials(templateFile).right
+        _ <- checkTemplateCompiles(contentIncludingPartials).right
+      } yield {
+        buildRequiredTemplateData(contentIncludingPartials) match {
+          case Valid(data) => HandlebarsTemplate(contentIncludingPartials, HandlebarsParsing.processProvidedDataFields(data, templateFile))
+          case invalid     => HandlebarsTemplate(contentIncludingPartials, invalid)
+        }
+      }
     }
   }
 
@@ -103,26 +125,6 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     either match {
       case Right(result) => Valid(result)
       case Left(error)   => Invalid(NonEmptyList.of(error))
-    }
-  }
-
-  private def validateProvidedDataType[T, R <: HList, M <: HList](requiredData: RequiredTemplateData.obj, providedType: String, clazz: Class[T])
-                                                              (implicit labelledGen: LabelledGeneric.Aux[T, R],
-                                                               keysR: Keys.Aux[R, M],
-                                                               trav: ToTraversable.Aux[M, List, Symbol]): ErrorsOr[Unit] = {
-
-    val keys = keysR.apply.toList.map(_.name)
-    requiredData.fields.get(providedType) match {
-      case Some(obj(fields))  =>
-        val failures = fields.flatMap {
-          case (fieldName, RequiredTemplateData.string) if !keys.contains(fieldName) => Some(s"$providedType.$fieldName is not a valid $providedType property field")
-          case (_, RequiredTemplateData.string)                                      => None
-          case (fieldName, _)                                                        => Some(s"$providedType.$fieldName is not a string")
-        }.toList
-        if (failures.nonEmpty) Invalid(NonEmptyList.fromListUnsafe(failures))
-        else Valid(())
-      case Some(otherType)    => Invalid(NonEmptyList.of(s"$providedType property incorrect type"))
-      case None               => Valid(())
     }
   }
 

@@ -522,7 +522,7 @@ class HandlebarsParsingSpec extends FlatSpec
       "system" -> obj(Map(
         "date" -> string))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.date is not a valid system property field")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.date is not a valid system property field")
   }
 
   it should "reject templates that references provided System parameters with the wrong type" in {
@@ -530,14 +530,14 @@ class HandlebarsParsingSpec extends FlatSpec
       "system" -> obj(Map(
         "year" -> optString))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.year is not a string")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system.year is not a string")
   }
 
   it should "reject templates that references the provided System parameters as the wrong type" in {
     val reqData1 = obj(Map(
       "system" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system property incorrect type")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("system property incorrect type")
   }
 
   it should "reject templates that references non-existent provided Profile parameter" in {
@@ -545,7 +545,7 @@ class HandlebarsParsingSpec extends FlatSpec
       "profile" -> obj(Map(
         "middleName" -> string))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.middleName is not a valid profile property field")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.middleName is not a valid profile property field")
   }
 
   it should "reject templates that references provided Profile parameters with the wrong type" in {
@@ -553,14 +553,14 @@ class HandlebarsParsingSpec extends FlatSpec
       "profile" -> obj(Map(
         "firstName" -> optString))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.firstName is not a string")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile.firstName is not a string")
   }
 
   it should "reject templates that references the provided Profile parameters as the wrong type" in {
     val reqData1 = obj(Map(
       "profile" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile property incorrect type")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("profile property incorrect type")
   }
 
   it should "reject templates that references non-existent provided Email Recipient parameter" in {
@@ -568,7 +568,7 @@ class HandlebarsParsingSpec extends FlatSpec
       "recipient" -> obj(Map(
         "emailSomething" -> string))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailSomething is not a valid recipient property field")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailSomething is not a valid recipient property field")
   }
 
   it should "reject templates that references provided Email Recipient parameters with the wrong type" in {
@@ -576,14 +576,14 @@ class HandlebarsParsingSpec extends FlatSpec
       "recipient" -> obj(Map(
         "emailAddress" -> optString))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailAddress is not a string")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient.emailAddress is not a string")
   }
 
   it should "reject templates that references the provided Email Recipient parameters as the wrong type" in {
     val reqData1 = obj(Map(
       "recipient" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient property incorrect type")
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid("recipient property incorrect type")
   }
 
   it should "reject templates that references non-existent provided SMS Recipient parameter" in {
@@ -591,7 +591,7 @@ class HandlebarsParsingSpec extends FlatSpec
       "recipient" -> obj(Map(
         "mobileNumber" -> string))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.mobileNumber is not a valid recipient property field")
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.mobileNumber is not a valid recipient property field")
   }
 
   it should "reject templates that references provided SMS Recipient parameters with the wrong type" in {
@@ -599,14 +599,14 @@ class HandlebarsParsingSpec extends FlatSpec
       "recipient" -> obj(Map(
         "telephoneNumber" -> optString))))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.telephoneNumber is not a string")
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient.telephoneNumber is not a string")
   }
 
   it should "reject templates that references the provided SMS Recipient parameters as the wrong type" in {
     val reqData1 = obj(Map(
       "recipient" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient property incorrect type")
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid("recipient property incorrect type")
   }
 
   it should "accept Email templates that correctly reference provided parameters" in {
@@ -625,7 +625,7 @@ class HandlebarsParsingSpec extends FlatSpec
     val result = obj(Map(
       "field1" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, emailTemplateFile) shouldBe Valid(result)
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) shouldBe Valid(result)
   }
 
   it should "accept SMS templates that correctly reference provided parameters" in {
@@ -644,7 +644,7 @@ class HandlebarsParsingSpec extends FlatSpec
     val result = obj(Map(
       "field1" -> string))
 
-    new HandlebarsParsing(noOpPartialsRetriever).processProvidedDataFields(reqData1, smsTemplateFile) shouldBe Valid(result)
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) shouldBe Valid(result)
   }
 
   it should "do the whole thing" in {
