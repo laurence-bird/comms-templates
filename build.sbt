@@ -7,9 +7,9 @@ licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "cats-core" % "0.8.1",
+  "org.typelevel" %% "cats-core" % "0.9.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
-  "com.ovoenergy" %% "comms-kafka-messages" % "0.0.29",
+  "com.ovoenergy" %% "comms-kafka-messages" % "1.0",
   "org.parboiled" %% "parboiled" % "2.1.3",
   "com.github.jknack" % "handlebars" % "4.0.6",
   "com.amazonaws" % "aws-java-sdk-s3" % "1.11.57",
