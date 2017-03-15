@@ -7,8 +7,4 @@ case class EmailTemplateFiles(
                             htmlBody: TemplateFile,
                             textBody: Option[TemplateFile],
                             sender: Option[String]
-                            ) {
-
-
-
-}
+                            )

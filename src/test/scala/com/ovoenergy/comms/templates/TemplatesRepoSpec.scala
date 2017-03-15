@@ -106,7 +106,8 @@ class TemplatesRepoSpec extends FlatSpec
     }
 
     val exp = CommTemplate[Id](
-      email = Some(EmailTemplate[Id](parsedSubject, parsedHtmlBody, Some(parsedOther), None))
+      email = Some(EmailTemplate[Id](parsedSubject, parsedHtmlBody, Some(parsedOther), None)),
+      sms = None
     )
     TemplatesRepo.getTemplate(TemplatesContext(MockEmailTemplatesRetriever, Parser), commManifest) shouldBe Valid(exp)
   }

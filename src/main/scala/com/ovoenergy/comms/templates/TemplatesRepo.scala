@@ -13,16 +13,12 @@ import scala.language.higherKinds
 
 object TemplatesRepo {
 
-  private val log = LoggerFactory.getLogger("TemplatesRepo")
-
   def getTemplate(context: TemplatesContext, commManifest: CommManifest): ErrorsOr[CommTemplate[Id]] = {
     val commTemplate = CommTemplate[ErrorsOr](
-      email = getEmailTemplate(context, commManifest)
+      email = getEmailTemplate(context, commManifest),
+      sms = None // TODO
     )
-    validateTemplate(commTemplate) match {
-      case Valid(_)   => commTemplate.aggregate
-      case Invalid(e) => Invalid(e)
-    }
+    commTemplate.validate andThen (_ => commTemplate.aggregate)
   }
 
   private def getEmailTemplate(context: TemplatesContext, commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
@@ -38,9 +34,4 @@ object TemplatesRepo {
     }
   }
 
-  private def validateTemplate[A[_]](commTemplate: CommTemplate[A]): ErrorsOr[Unit] = {
-    //At least one channel
-   if (commTemplate.email.isEmpty) Invalid(NonEmptyList.of("Template has no channels defined"))
-   else Valid(())
-  }
 }

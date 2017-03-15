@@ -16,9 +16,8 @@ An example template in S3 could be made up of the following files:
   * Html Body
   * Text Body (optional)
   * Sender (optional)
-* SMS: (yet to be implemented)
-  * Body
-  * Sender (optional)
+* SMS:
+  * Text body
  
 Each of these files contains a [handlebars template](http://handlebarsjs.com/expressions.html).
  

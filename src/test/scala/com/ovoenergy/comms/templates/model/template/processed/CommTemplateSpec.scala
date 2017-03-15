@@ -31,14 +31,17 @@ class CommTemplateSpec extends FlatSpec
     "d" -> strings))
 
   it should "combine the required data from all channels forming the template" in {
-    val template = CommTemplate[Id](Some(EmailTemplate[Id](
-      subject = HandlebarsTemplate("", Valid(reqData1)),
-      htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-      textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
-      sender = None
-    )))
+    val template = CommTemplate[Id](
+      email = Some(EmailTemplate[Id](
+        subject = HandlebarsTemplate("", Valid(reqData1)),
+        htmlBody = HandlebarsTemplate("", Valid(reqData2)),
+        textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+        sender = None
+      )),
+      sms = None
+    )
 
-    template.combineRequiredData should beValid(obj(Map(
+    template.requiredData should beValid(obj(Map(
       "a" -> string,
       "b" -> optString,
       "c" -> obj(Map(
@@ -49,7 +52,7 @@ class CommTemplateSpec extends FlatSpec
   }
 
   it should "handle no channels when combining required data" in {
-    val template = CommTemplate[Id](None)
-    template.combineRequiredData should haveInvalid("No templates to combine")
+    val template = CommTemplate[Id](None, None)
+    template.requiredData should haveInvalid("No templates to combine")
   }
 }
