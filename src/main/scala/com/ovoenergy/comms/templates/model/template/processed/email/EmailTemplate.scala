@@ -22,7 +22,7 @@ case class EmailTemplate[M[_]: Applicative](
     }
   }
 
-  def combineRequiredData: M[ErrorsOr[RequiredTemplateData.obj]] = {
+  def requiredData: M[ErrorsOr[RequiredTemplateData.obj]] = {
     import cats.instances.list._
     (subject |@| htmlBody |@| textBody.sequenceU) map {
       case(s, h, t) =>

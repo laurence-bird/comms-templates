@@ -40,7 +40,7 @@ class EmailTemplateSpec extends FlatSpec
       sender = None
     )
 
-    template.combineRequiredData should beValid(obj(Map(
+    template.requiredData should beValid(obj(Map(
       "a" -> string,
       "b" -> optString,
       "c" -> obj(Map(
@@ -58,7 +58,7 @@ class EmailTemplateSpec extends FlatSpec
       sender = None
     )
 
-    template.combineRequiredData should beValid(obj(Map(
+    template.requiredData should beValid(obj(Map(
       "a" -> string,
       "b" -> optString,
       "c" -> obj(Map(

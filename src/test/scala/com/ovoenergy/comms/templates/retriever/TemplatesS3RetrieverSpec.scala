@@ -1,12 +1,11 @@
-package com.ovoenergy.comms.templates.retriever.email
+package com.ovoenergy.comms.templates.retriever
 
-import cats.data.NonEmptyList
-import cats.data.Validated.{Invalid, Valid}
 import cats.scalatest.ValidatedMatchers
 import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
 import com.ovoenergy.comms.templates.model.FileFormat
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.template.files.email.EmailTemplateFiles
+import com.ovoenergy.comms.templates.model.template.files.sms.SMSTemplateFiles
 import com.ovoenergy.comms.templates.s3.S3Client
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -38,7 +37,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec
       )
     )
 
-    new TemplatesS3Retriever(s3client).getTemplate(commManifest).get should beValid(EmailTemplateFiles(
+    new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest).get should beValid(EmailTemplateFiles(
       subject = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "the subject"),
       htmlBody = TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, someHtml),
       textBody = None,
@@ -64,7 +63,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec
       )
     )
 
-    new TemplatesS3Retriever(s3client).getTemplate(commManifest).get should beValid(EmailTemplateFiles(
+    new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest).get should beValid(EmailTemplateFiles(
       subject = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "the subject"),
       htmlBody = TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, someHtml),
       textBody = Some(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "text body")),
@@ -86,7 +85,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec
       )
     )
 
-    new TemplatesS3Retriever(s3client).getTemplate(commManifest) shouldBe None
+    new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest) shouldBe None
   }
 
   it should "handle incomplete template" in {
@@ -103,9 +102,36 @@ class TemplatesS3RetrieverSpec extends FlatSpec
       )
     )
 
-    new TemplatesS3Retriever(s3client).getTemplate(commManifest).get should (haveInvalid("Subject file not found on S3") and haveInvalid("HTML body file not found on S3"))
+    new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest).get should (haveInvalid("Subject file not found on S3") and haveInvalid("HTML body file not found on S3"))
   }
 
+  behavior of "TemplatesS3Retriever for SMS"
+
+  it should "handle basic template" in {
+    val s3client = s3(
+      contents = Map(
+        "service/cc-payment-taken/0.3/sms/body.txt" -> "the SMS body"
+      ),
+      files = Map(
+        "service/cc-payment-taken/0.3/sms" -> Seq(
+          "service/cc-payment-taken/0.3/sms/body.txt"
+        )
+      )
+    )
+
+    new TemplatesS3Retriever(s3client).getSMSTemplate(commManifest).get should beValid(SMSTemplateFiles(
+      textBody = TemplateFile(CommType.Service, Channel.SMS, FileFormat.Text, "the SMS body")
+    ))
+  }
+
+  it should "handle non existent Template" in {
+    val s3client = s3(
+      contents = Map.empty,
+      files = Map.empty
+    )
+
+    new TemplatesS3Retriever(s3client).getSMSTemplate(commManifest) shouldBe None
+  }
 
 
 }
