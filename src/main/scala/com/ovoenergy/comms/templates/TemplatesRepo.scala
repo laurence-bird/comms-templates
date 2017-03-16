@@ -16,7 +16,7 @@ object TemplatesRepo {
       email = getEmailTemplate(context, commManifest),
       sms = getSMSTemplate(context, commManifest)
     )
-    commTemplate.validate andThen (_ => commTemplate.aggregate)
+    commTemplate.checkAtLeastOneChannelDefined andThen (_ => commTemplate.aggregate)
   }
 
   private def getEmailTemplate(context: TemplatesContext, commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {

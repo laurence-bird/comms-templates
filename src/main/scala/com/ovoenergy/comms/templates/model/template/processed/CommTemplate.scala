@@ -18,7 +18,7 @@ case class CommTemplate[M[_]: Applicative](
                                sms: Option[M[SMSTemplate[Id]]]
                              ) {
 
-  def validate: ErrorsOr[Unit] = {
+  def checkAtLeastOneChannelDefined: ErrorsOr[Unit] = {
     if (email.isEmpty && sms.isEmpty) Invalid(NonEmptyList.of("Template has no channels defined"))
     else Valid(())
   }
