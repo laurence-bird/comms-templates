@@ -16,12 +16,13 @@ An example template in S3 could be made up of the following files:
   * Html Body
   * Text Body (optional)
   * Sender (optional)
-* SMS: (yet to be implemented)
-  * Body
-  * Sender (optional)
+* SMS:
+  * Text body
  
 Each of these files contains a [handlebars template](http://handlebarsjs.com/expressions.html).
  
+A template must contain template files for at least one communication channel.
+
 ## What does the library do 
 
 This is a library that collects a comms Template from S3, returning the following:
@@ -50,7 +51,7 @@ object Example extends App {
 
   TemplatesRepo.getTemplate(context, manifest) match {
     case Valid(template) =>
-      template.combineRequiredData match {
+      template.requiredData match {
         case Valid(data) => println(s"The required data for the template is $data")
         case invalid     => println(s"Errors found in the required data $invalid")
       }
@@ -69,7 +70,7 @@ The required data for the template is obj(Map(currencySymbol -> string, amount -
 
 The various aspects of the returned CommTemplate are wrapped by the ErrorsOr data type, which is just a type alias for the [Validated](http://eed3si9n.com/herding-cats/Validated.html) datatype provided by Cats. 
 
-In this way the library is able to return as much information about template issues, concatenated into the ErrorsOr, rather than just failing fast
+In this way the library is able to return a list of all the errors it discovered, rather than failing fast as soon as it encounters a problem.
 
 ## How to use
 
