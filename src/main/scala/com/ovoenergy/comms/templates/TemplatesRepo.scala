@@ -19,20 +19,22 @@ object TemplatesRepo {
     commTemplate.checkAtLeastOneChannelDefined andThen (_ => commTemplate.aggregate)
   }
 
-  private def getEmailTemplate(context: TemplatesContext, commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
+  private def getEmailTemplate(context: TemplatesContext,
+                               commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
     val parser = context.parser.parseTemplate _
     context.templatesRetriever.getEmailTemplate(commManifest).map {
       _ andThen { t =>
-        val subject = parser(t.subject)
+        val subject  = parser(t.subject)
         val htmlBody = parser(t.htmlBody)
         val textBody = t.textBody.map(parser(_))
-        val sender = t.sender.map(EmailSender.parse)
+        val sender   = t.sender.map(EmailSender.parse)
         EmailTemplate[ErrorsOr](subject, htmlBody, textBody, sender).aggregate
       }
     }
   }
 
-  private def getSMSTemplate(context: TemplatesContext, commManifest: CommManifest): Option[ErrorsOr[SMSTemplate[Id]]] = {
+  private def getSMSTemplate(context: TemplatesContext,
+                             commManifest: CommManifest): Option[ErrorsOr[SMSTemplate[Id]]] = {
     val parser = context.parser.parseTemplate _
     context.templatesRetriever.getSMSTemplate(commManifest).map {
       _ andThen { t =>

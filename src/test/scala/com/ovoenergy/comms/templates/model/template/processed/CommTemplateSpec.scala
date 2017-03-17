@@ -9,74 +9,54 @@ import com.ovoenergy.comms.templates.model.template.processed.email.EmailTemplat
 import com.ovoenergy.comms.templates.model.template.processed.sms.SMSTemplate
 import org.scalatest.{FlatSpec, Matchers}
 
-class CommTemplateSpec extends FlatSpec
-  with Matchers
-  with ValidatedMatchers {
+class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
-  val reqData1 = obj(Map(
-    "a" -> string,
-    "b" -> optString,
-    "c" -> obj(Map(
-      "w" -> string))))
+  val reqData1 = obj(Map("a" -> string, "b" -> optString, "c" -> obj(Map("w" -> string))))
 
-  val reqData2 = obj(Map(
-    "b" -> optString,
-    "c" -> obj(Map(
-      "x" -> string)),
-    "d" -> strings))
+  val reqData2 = obj(Map("b" -> optString, "c" -> obj(Map("x" -> string)), "d" -> strings))
 
-  val reqData3 = obj(Map(
-    "b" -> optString,
-    "c" -> obj(Map(
-      "y" -> string)),
-    "d" -> strings))
+  val reqData3 = obj(Map("b" -> optString, "c" -> obj(Map("y" -> string)), "d" -> strings))
 
-  val reqData4 = obj(Map(
-    "b" -> optString,
-    "c" -> obj(Map(
-      "z" -> string)),
-    "d" -> strings))
+  val reqData4 = obj(Map("b" -> optString, "c" -> obj(Map("z" -> string)), "d" -> strings))
 
   it should "combine the required data from all channels forming the template" in {
     val template = CommTemplate[Id](
-      email = Some(EmailTemplate[Id](
-        subject = HandlebarsTemplate("", Valid(reqData1)),
-        htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-        textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
-        sender = None
-      )),
-      sms = Some(SMSTemplate[Id](
-        textBody = HandlebarsTemplate("", Valid(reqData4))
-      ))
+      email = Some(
+        EmailTemplate[Id](
+          subject = HandlebarsTemplate("", Valid(reqData1)),
+          htmlBody = HandlebarsTemplate("", Valid(reqData2)),
+          textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+          sender = None
+        )),
+      sms = Some(
+        SMSTemplate[Id](
+          textBody = HandlebarsTemplate("", Valid(reqData4))
+        ))
     )
 
-    template.requiredData should beValid(obj(Map(
-      "a" -> string,
-      "b" -> optString,
-      "c" -> obj(Map(
-        "w" -> string,
-        "x" -> string,
-        "y" -> string,
-        "z" -> string)),
-      "d" -> strings)))
+    template.requiredData should beValid(
+      obj(
+        Map("a" -> string,
+            "b" -> optString,
+            "c" -> obj(Map("w" -> string, "x" -> string, "y" -> string, "z" -> string)),
+            "d" -> strings)))
   }
 
   it should "fail to combine the required data from all channels if they conflict" in {
-    val conflictingReqData = obj(Map(
-      "b" -> optString,
-      "c" -> string,
-      "d" -> strings))
+    val conflictingReqData = obj(Map("b" -> optString, "c" -> string, "d" -> strings))
 
     val template = CommTemplate[Id](
-      email = Some(EmailTemplate[Id](
-        subject = HandlebarsTemplate("", Valid(reqData1)),
-        htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-        textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
-        sender = None
-      )),
-      sms = Some(SMSTemplate[Id](
-        textBody = HandlebarsTemplate("", Valid(conflictingReqData))
-      ))
+      email = Some(
+        EmailTemplate[Id](
+          subject = HandlebarsTemplate("", Valid(reqData1)),
+          htmlBody = HandlebarsTemplate("", Valid(reqData2)),
+          textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+          sender = None
+        )),
+      sms = Some(
+        SMSTemplate[Id](
+          textBody = HandlebarsTemplate("", Valid(conflictingReqData))
+        ))
     )
 
     template.requiredData should not be valid

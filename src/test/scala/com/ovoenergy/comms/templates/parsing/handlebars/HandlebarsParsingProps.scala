@@ -16,9 +16,8 @@ object HandlebarsParsingProps extends Properties("HandlebarsParsing") {
 
   implicit val arbitraryKey: Arbitrary[String] = Arbitrary(Gen.alphaStr.filter(_.nonEmpty))
 
-  implicit def arbitraryNonEmptyMap(implicit
-                                    rtd: Arbitrary[RequiredTemplateData])
-                                    : Arbitrary[Map[String, RequiredTemplateData]] = Arbitrary {
+  implicit def arbitraryNonEmptyMap(
+      implicit rtd: Arbitrary[RequiredTemplateData]): Arbitrary[Map[String, RequiredTemplateData]] = Arbitrary {
     Gen.nonEmptyListOf(rtd.arbitrary).flatMap { (values: Seq[RequiredTemplateData]) =>
       val gens: Seq[Gen[(String, RequiredTemplateData)]] = values.map { value =>
         for {
@@ -36,46 +35,44 @@ object HandlebarsParsingProps extends Properties("HandlebarsParsing") {
     }
   }
 
-  property("parses valid trees correctly") =
-    forAllNoShrink { (tree: obj) =>
-      val input = genHandlebarsTemplate(tree, Vector.empty)
-      val success =
-        new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) == Valid(tree)
-      if (!success) {
-        println(s"$input ->")
-        println(s"  ${new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input)}")
-        println()
-      }
-      success
+  property("parses valid trees correctly") = forAllNoShrink { (tree: obj) =>
+    val input = genHandlebarsTemplate(tree, Vector.empty)
+    val success =
+      new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) == Valid(tree)
+    if (!success) {
+      println(s"$input ->")
+      println(s"  ${new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input)}")
+      println()
     }
+    success
+  }
 
   def freeFromEmptyMaps(tree: RequiredTemplateData): Boolean = tree match {
-    case obj(fields) if fields.isEmpty => false
-    case objs(fields) if fields.isEmpty => false
+    case obj(fields) if fields.isEmpty    => false
+    case objs(fields) if fields.isEmpty   => false
     case optObj(fields) if fields.isEmpty => false
-    case obj(fields) => fields.values.forall(freeFromEmptyMaps)
-    case optObj(fields) => fields.values.forall(freeFromEmptyMaps)
-    case objs(fields) => fields.values.forall(freeFromEmptyMaps)
-    case _ => true
+    case obj(fields)                      => fields.values.forall(freeFromEmptyMaps)
+    case optObj(fields)                   => fields.values.forall(freeFromEmptyMaps)
+    case objs(fields)                     => fields.values.forall(freeFromEmptyMaps)
+    case _                                => true
   }
 
   def genHandlebarsTemplate(tree: RequiredTemplateData, keyParts: Vector[String]): String = {
     val key = keyParts.mkString(".")
     tree match {
-      case `string` => s"{{ $key }}"
+      case `string`    => s"{{ $key }}"
       case `optString` => s"{{#if $key }} {{ $key }} {{/if}}"
-      case `strings` => s"{{#each $key }} {{ this }} {{/each}}"
+      case `strings`   => s"{{#each $key }} {{ this }} {{/each}}"
       case obj(fields) => fields.map { case (k, v) => genHandlebarsTemplate(v, keyParts :+ k) }.mkString(" ")
       case optObj(fields) =>
         s"{{#if $key }}" +
-        fields.map { case (k, v) => genHandlebarsTemplate(v, keyParts :+ k) }.mkString(" ", " ", " ") +
-        "{{/if}}"
+          fields.map { case (k, v) => genHandlebarsTemplate(v, keyParts :+ k) }.mkString(" ", " ", " ") +
+          "{{/if}}"
       case objs(fields) =>
         s"{{#each $key }}" +
-        fields.map { case (k, v) => genHandlebarsTemplate(v, Vector("this", k)) }.mkString(" ", " ", " ") +
-        "{{/each}}"
+          fields.map { case (k, v) => genHandlebarsTemplate(v, Vector("this", k)) }.mkString(" ", " ", " ") +
+          "{{/each}}"
     }
   }
-
 
 }

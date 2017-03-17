@@ -13,8 +13,7 @@ object EmailSender {
 
   def parse(string: String): ValidatedNel[String, EmailSender] = string match {
     case NameAndAddress(name, address) => Valid(EmailSender(name, address))
-    case other => Invalid(NonEmptyList.of(s"Invalid email sender string: $other"))
+    case other                         => Invalid(NonEmptyList.of(s"Invalid email sender string: $other"))
   }
 
 }
-

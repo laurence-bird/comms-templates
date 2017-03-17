@@ -64,7 +64,8 @@ private[parsing] object IntermediateAST {
     def toRequiredTemplateData: ErrorsOr[RequiredTemplateData] = _convert
 
     def _convert: ErrorsOr[obj] = {
-      val validatedFields: ErrorsOr[Map[String, RequiredTemplateData]] = fields.toMap.traverseU(_.toRequiredTemplateData)
+      val validatedFields: ErrorsOr[Map[String, RequiredTemplateData]] =
+        fields.toMap.traverseU(_.toRequiredTemplateData)
       validatedFields.map(fields => obj(fields))
     }
 
@@ -84,7 +85,7 @@ private[parsing] object IntermediateAST {
 
   object Opt {
     def strOrObj: Opt = {
-      val opt = Opt(null)
+      val opt      = Opt(null)
       val strOrObj = StrOrObj(replaceWith = opt.x = _)
       opt.x = strOrObj
       opt
@@ -97,8 +98,8 @@ private[parsing] object IntermediateAST {
     */
   case class Opt(var x: Type) extends Node {
     def toRequiredTemplateData = x match {
-      case _: Str => Valid(optString)
-      case o: Obj => o._convert.map(validObj => optObj(validObj.fields))
+      case _: Str      => Valid(optString)
+      case o: Obj      => o._convert.map(validObj => optObj(validObj.fields))
       case _: StrOrObj => Valid(optString)
       case c: Conflict => c.toRequiredTemplateData
     }
@@ -106,7 +107,7 @@ private[parsing] object IntermediateAST {
 
   object Loop {
     def strOrObj: Loop = {
-      val loop = Loop(null)
+      val loop     = Loop(null)
       val strOrObj = StrOrObj(replaceWith = loop.x = _)
       loop.x = strOrObj
       loop
@@ -119,8 +120,8 @@ private[parsing] object IntermediateAST {
     */
   case class Loop(var x: Type) extends Node {
     def toRequiredTemplateData = x match {
-      case _: Str => Valid(strings)
-      case o: Obj => o._convert.map(validObj => objs(validObj.fields))
+      case _: Str      => Valid(strings)
+      case o: Obj      => o._convert.map(validObj => objs(validObj.fields))
       case _: StrOrObj => Valid(strings)
       case c: Conflict => c.toRequiredTemplateData
     }

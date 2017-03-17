@@ -24,11 +24,11 @@ object RequiredTemplateDataProps extends Properties("RequiredTemplateData") {
 
   implicit val arbitraryKey: Arbitrary[String] = Arbitrary(Gen.oneOf(Seq("A", "B")))
 
-  property("does not combine conflicting trees") =
-    forAllNoShrink { (x: RequiredTemplateData.obj, y: RequiredTemplateData.obj) =>
+  property("does not combine conflicting trees") = forAllNoShrink {
+    (x: RequiredTemplateData.obj, y: RequiredTemplateData.obj) =>
       val result = RequiredTemplateData.combine(List(x, y))
       result.isInvalid ==> isConflicting(x, y)
-    }
+  }
 
   // checks that a is entirely contained in b
   private def isContainedIn(a: RequiredTemplateData, b: RequiredTemplateData): Boolean = (a, b) match {
@@ -38,7 +38,7 @@ object RequiredTemplateDataProps extends Properties("RequiredTemplateData") {
     case (obj(xs), obj(ys))         => xs.forall { case (k, v1) => ys.get(k).fold(false)(v2 => isContainedIn(v1, v2)) }
     case (optObj(xs), optObj(ys))   => xs.forall { case (k, v1) => ys.get(k).fold(false)(v2 => isContainedIn(v1, v2)) }
     case (objs(xs), objs(ys))       => xs.forall { case (k, v1) => ys.get(k).fold(false)(v2 => isContainedIn(v1, v2)) }
-    case _ => false // types don't match
+    case _                          => false // types don't match
   }
 
   private def isConflicting(a: RequiredTemplateData, b: RequiredTemplateData): Boolean = (a, b) match {
@@ -48,7 +48,7 @@ object RequiredTemplateDataProps extends Properties("RequiredTemplateData") {
     case (obj(xs), obj(ys))         => (xs.keySet intersect ys.keySet).exists(k => isConflicting(xs(k), ys(k)))
     case (optObj(xs), optObj(ys))   => (xs.keySet intersect ys.keySet).exists(k => isConflicting(xs(k), ys(k)))
     case (objs(xs), objs(ys))       => (xs.keySet intersect ys.keySet).exists(k => isConflicting(xs(k), ys(k)))
-    case _ => true // types don't match
+    case _                          => true // types don't match
   }
 
 }

@@ -8,6 +8,6 @@ import com.ovoenergy.comms.templates.ErrorsOr
   * @param requiredData       The type of data that is required to correctly populate the template.
   */
 case class HandlebarsTemplate(
-                               rawExpandedContent: String,
-                               requiredData: ErrorsOr[RequiredTemplateData.obj]
-                             )
+    rawExpandedContent: String,
+    requiredData: ErrorsOr[RequiredTemplateData.obj]
+)
