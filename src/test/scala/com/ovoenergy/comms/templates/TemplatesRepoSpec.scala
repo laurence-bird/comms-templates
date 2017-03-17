@@ -17,9 +17,7 @@ import com.ovoenergy.comms.templates.parsing.Parsing
 import com.ovoenergy.comms.templates.retriever.TemplatesRetriever
 import org.scalatest.{FlatSpec, Matchers}
 
-class TemplatesRepoSpec extends FlatSpec
-  with Matchers
-  with ValidatedMatchers{
+class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   object NoOpParsing extends Parsing[HandlebarsTemplate] {
     override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
@@ -28,7 +26,7 @@ class TemplatesRepoSpec extends FlatSpec
   }
 
   val commManifest = CommManifest(CommType.Service, "some-template", "1.0")
-  val requiredData: Map[String, RequiredTemplateData] =  Map(
+  val requiredData: Map[String, RequiredTemplateData] = Map(
     "field1" -> string,
     "field2" -> string
   )
@@ -38,7 +36,7 @@ class TemplatesRepoSpec extends FlatSpec
   it should "return an Invalid if there are no templates for any channels" in {
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
-      override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = None
+      override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]]     = None
     }
     TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, NoOpParsing), commManifest) should
       haveInvalid("Template has no channels defined")
@@ -55,16 +53,18 @@ class TemplatesRepoSpec extends FlatSpec
   }
 
   it should "handle errors parsing email template" in {
-    val subject = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "The Subject")
+    val subject  = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "The Subject")
     val htmlBody = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Html, "The Html Body")
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] =
-        Some(Valid(EmailTemplateFiles(
-          subject = subject,
-          htmlBody = htmlBody,
-          textBody = None,
-          sender = None
-        )))
+        Some(
+          Valid(
+            EmailTemplateFiles(
+              subject = subject,
+              htmlBody = htmlBody,
+              textBody = None,
+              sender = None
+            )))
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = None
     }
 
@@ -77,27 +77,30 @@ class TemplatesRepoSpec extends FlatSpec
         }
       }
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) should (haveInvalid("Error parsing subject") and haveInvalid("Error parsing htmlBody"))
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) should (haveInvalid(
+      "Error parsing subject") and haveInvalid("Error parsing htmlBody"))
   }
 
   it should "process valid email template" in {
-    val subject = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "The Subject")
+    val subject  = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "The Subject")
     val htmlBody = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Html, "The Html Body")
-    val other = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "Other")
+    val other    = TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, "Other")
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] =
-        Some(Valid(EmailTemplateFiles(
-          subject = subject,
-          htmlBody = htmlBody,
-          textBody = Some(other),
-          sender = None
-        )))
+        Some(
+          Valid(
+            EmailTemplateFiles(
+              subject = subject,
+              htmlBody = htmlBody,
+              textBody = Some(other),
+              sender = None
+            )))
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = None
     }
 
-    val parsedSubject = HandlebarsTemplate("Rendered subject", Valid(obj(requiredData)))
+    val parsedSubject  = HandlebarsTemplate("Rendered subject", Valid(obj(requiredData)))
     val parsedHtmlBody = HandlebarsTemplate("Rendered html body", Valid(obj(requiredData)))
-    val parsedOther = HandlebarsTemplate("Rendered other", Valid(obj(requiredData)))
+    val parsedOther    = HandlebarsTemplate("Rendered other", Valid(obj(requiredData)))
     object Parser extends Parsing[HandlebarsTemplate] {
       override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
         templateFile match {
@@ -119,7 +122,7 @@ class TemplatesRepoSpec extends FlatSpec
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] =
-      Some(Invalid(NonEmptyList.of("Some error retrieving SMS template")))
+        Some(Invalid(NonEmptyList.of("Some error retrieving SMS template")))
     }
     TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, NoOpParsing), commManifest) should
       haveInvalid("Some error retrieving SMS template")
@@ -129,9 +132,11 @@ class TemplatesRepoSpec extends FlatSpec
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] =
-        Some(Valid(SMSTemplateFiles(
-          textBody = TemplateFile(commManifest.commType, Channel.SMS, FileFormat.Text, "the SMS body")
-        )))
+        Some(
+          Valid(
+            SMSTemplateFiles(
+              textBody = TemplateFile(commManifest.commType, Channel.SMS, FileFormat.Text, "the SMS body")
+            )))
     }
 
     object Parser extends Parsing[HandlebarsTemplate] {
@@ -146,9 +151,11 @@ class TemplatesRepoSpec extends FlatSpec
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] =
-        Some(Valid(SMSTemplateFiles(
-          textBody = TemplateFile(commManifest.commType, Channel.SMS, FileFormat.Text, "the SMS body")
-        )))
+        Some(
+          Valid(
+            SMSTemplateFiles(
+              textBody = TemplateFile(commManifest.commType, Channel.SMS, FileFormat.Text, "the SMS body")
+            )))
     }
 
     val parsedBody = HandlebarsTemplate("Rendered SMS body", Valid(obj(requiredData)))
@@ -162,6 +169,5 @@ class TemplatesRepoSpec extends FlatSpec
     )
     TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) shouldBe Valid(exp)
   }
-
 
 }

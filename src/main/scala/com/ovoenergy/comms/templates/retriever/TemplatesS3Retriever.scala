@@ -18,10 +18,10 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
 
   private object Filenames {
     object Email {
-      val Subject = "subject.txt"
+      val Subject  = "subject.txt"
       val HtmlBody = "body.html"
       val TextBody = "body.txt"
-      val Sender = "sender.txt"
+      val Sender   = "sender.txt"
     }
     object SMS {
       val TextBody = "body.txt"
@@ -46,25 +46,25 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       }
 
       val textBody: Option[TemplateFile] = s3File(Filenames.Email.TextBody, Channel.Email, commManifest)
-          .map(TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, _))
+        .map(TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, _))
 
       val customSender: Option[String] = s3File(Filenames.Email.Sender, Channel.Email, commManifest)
 
-      Some(Apply[ErrorsOr]
-        .map2(subject, htmlBody) {
-          case (sub, html) =>
-            EmailTemplateFiles(
-              subject = sub,
-              htmlBody = html,
-              textBody = textBody,
-              sender = customSender
-            )
-        }
-      )
+      Some(
+        Apply[ErrorsOr]
+          .map2(subject, htmlBody) {
+            case (sub, html) =>
+              EmailTemplateFiles(
+                subject = sub,
+                htmlBody = html,
+                textBody = textBody,
+                sender = customSender
+              )
+          })
     }
   }
 
-  override def getSMSTemplate(commManifest: CommManifest) : Option[ErrorsOr[SMSTemplateFiles]] = {
+  override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = {
     if (s3Client.listFiles(templatePrefix(Channel.SMS, commManifest)).isEmpty) {
       log.debug(s"No SMS template found for $commManifest")
       None

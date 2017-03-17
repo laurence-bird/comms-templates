@@ -3,9 +3,7 @@ package com.ovoenergy.comms.templates.model
 import cats.scalatest.ValidatedMatchers
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmailSenderSpec extends FlatSpec
-  with Matchers
-  with ValidatedMatchers {
+class EmailSenderSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   behavior of "Email Sender"
 

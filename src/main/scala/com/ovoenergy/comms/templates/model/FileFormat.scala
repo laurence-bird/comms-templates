@@ -6,5 +6,5 @@ sealed trait FileFormat {
 
 object FileFormat {
   case object Html extends FileFormat { val extension = "html" }
-  case object Text extends FileFormat { val extension = "txt" }
+  case object Text extends FileFormat { val extension = "txt"  }
 }

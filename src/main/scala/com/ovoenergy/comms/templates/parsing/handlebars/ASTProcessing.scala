@@ -10,10 +10,10 @@ private[parsing] object ASTProcessing {
   private case class Context(root: Obj)
 
   def buildRequiredTemplateData(asts: Seq[HandlebarsAST]): ErrorsOr[RequiredTemplateData.obj] = {
-    val root = Obj.fresh(markAsConflict = () => ())
+    val root             = Obj.fresh(markAsConflict = () => ())
     implicit val context = Context(root)
-    asts.foreach {
-      ast => processAST(ast, root)
+    asts.foreach { ast =>
+      processAST(ast, root)
     }
     root._convert
   }
@@ -40,7 +40,7 @@ private[parsing] object ASTProcessing {
     */
   private def insertObj(name: String, path: String, parent: Type): (Obj, Type) = {
     val parentObj: Obj = parent match {
-      case obj: Obj => obj
+      case obj: Obj              => obj
       case StrOrObj(replaceWith) =>
         // since we're trying to insert an object as a child, the parent must be an object so we upgrade it
         val freshObj = Obj.fresh(markAsConflict = () => replaceWith(Conflict(path)))
@@ -111,11 +111,11 @@ private[parsing] object ASTProcessing {
     * @return The parsed key, the final node that was created, and the new local root (which may have been replaced)
     */
   private def walkTree(rawKey: String, localRoot: Type)(implicit ctx: Context): (DottedKey, Type, Type) = {
-    val key = DottedKey.parse(rawKey)
+    val key                                        = DottedKey.parse(rawKey)
     val (normalisedKey, startFromRoot, choseLocal) = chooseRoot(key, localRoot)
-    val (parentNode, _, newRoot) = normalisedKey.init.foldLeft((startFromRoot, Vector.empty[String], startFromRoot)){
+    val (parentNode, _, newRoot) = normalisedKey.init.foldLeft((startFromRoot, Vector.empty[String], startFromRoot)) {
       case ((parent, parentPath, updatedRoot), name) =>
-        val path = parentPath :+ name
+        val path                        = parentPath :+ name
         val (nextParent, updatedParent) = insertObj(name, path.mkString("."), parent)
         if (parentPath.isEmpty) {
           // this is the first time around, so the parent was the local root
@@ -143,7 +143,7 @@ private[parsing] object ASTProcessing {
   }
 
   private def processRef(ref: Ref, localRoot: Type)(implicit ctx: Context): Unit = {
-    val rawKey = ref.text
+    val rawKey               = ref.text
     val (key, parentNode, _) = walkTree(rawKey, localRoot)
     parentNode match {
       case Str(markAsConflict) =>
@@ -163,14 +163,16 @@ private[parsing] object ASTProcessing {
           obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
           replaceWith(obj)
         }
-      case obj@Obj(_, markAsConflict) =>
+      case obj @ Obj(_, markAsConflict) =>
         if (key.last == "this") {
           markAsConflict()
         } else {
           obj.get(key.last) match {
             case Some(Str(_)) => // already inserted, nothing to do
-            case None | Some(StrOrObj(_)) => obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
-            case Some(Opt(StrOrObj(replaceWith))) => replaceWith(Str(markAsConflict = () => replaceWith(Conflict(rawKey))))
+            case None | Some(StrOrObj(_)) =>
+              obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
+            case Some(Opt(StrOrObj(replaceWith))) =>
+              replaceWith(Str(markAsConflict = () => replaceWith(Conflict(rawKey))))
             case _ =>
               obj.put(key.last, Conflict(rawKey)) // conflict! the same thing has 2 different types
           }
@@ -184,7 +186,8 @@ private[parsing] object ASTProcessing {
     _processEach(each, key, parentNode, newLocalRoot)
   }
 
-  private def _processEach(each: Each, key: DottedKey, parentNode: Type, localRoot: Type)(implicit ctx: Context): Unit = {
+  private def _processEach(each: Each, key: DottedKey, parentNode: Type, localRoot: Type)(
+      implicit ctx: Context): Unit = {
     val rawKey = each.text
     parentNode match {
       case obj: Obj =>
@@ -254,7 +257,7 @@ private[parsing] object ASTProcessing {
         _if.elseChildren.foreach(processAST(_, localRoot = newLocalRoot))
       case _ =>
         println("yo I'm in your unhandled case (if)")
-        // TODO is this case ever used?
+      // TODO is this case ever used?
     }
   }
 
@@ -262,16 +265,16 @@ private[parsing] object ASTProcessing {
     * Update the intermediate AST tree to reflect the new information provided by the given AST.
     */
   private def processAST(ast: HandlebarsAST, localRoot: Type)(implicit ctx: Context): Unit = ast match {
-    case ref: Ref => processRef(ref, localRoot)
+    case ref: Ref   => processRef(ref, localRoot)
     case each: Each => processEach(each, localRoot)
-    case _if: If => processIf(_if, localRoot)
+    case _if: If    => processIf(_if, localRoot)
   }
 
 }
 
 object DottedKey {
   def parse(key: String): DottedKey = {
-    val parts = key.split('.')
+    val parts  = key.split('.')
     val result = DottedKey(parts.dropRight(1), parts.last)
     result
   }

@@ -8,27 +8,13 @@ import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplate
 import com.ovoenergy.comms.templates.model.RequiredTemplateData.{obj, optString, string, strings}
 import org.scalatest.{FlatSpec, Matchers}
 
-class EmailTemplateSpec extends FlatSpec
-  with Matchers
-  with ValidatedMatchers {
+class EmailTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
-  val reqData1 = obj(Map(
-    "a" -> string,
-    "b" -> optString,
-    "c" -> obj(Map(
-      "x" -> string))))
+  val reqData1 = obj(Map("a" -> string, "b" -> optString, "c" -> obj(Map("x" -> string))))
 
-  val reqData2 = obj(Map(
-    "b" -> optString,
-    "c" -> obj(Map(
-      "y" -> string)),
-    "d" -> strings))
+  val reqData2 = obj(Map("b" -> optString, "c" -> obj(Map("y" -> string)), "d" -> strings))
 
-  val reqData3 = obj(Map(
-    "b" -> optString,
-    "c" -> obj(Map(
-      "z" -> string)),
-    "d" -> strings))
+  val reqData3 = obj(Map("b" -> optString, "c" -> obj(Map("z" -> string)), "d" -> strings))
 
   behavior of "EmailTemplate"
 
@@ -40,14 +26,12 @@ class EmailTemplateSpec extends FlatSpec
       sender = None
     )
 
-    template.requiredData should beValid(obj(Map(
-      "a" -> string,
-      "b" -> optString,
-      "c" -> obj(Map(
-        "x" -> string,
-        "y" -> string,
-        "z" -> string)),
-      "d" -> strings)))
+    template.requiredData should beValid(
+      obj(
+        Map("a" -> string,
+            "b" -> optString,
+            "c" -> obj(Map("x" -> string, "y" -> string, "z" -> string)),
+            "d" -> strings)))
   }
 
   it should "combine the required data from parts forming the template no Text Body" in {
@@ -58,13 +42,8 @@ class EmailTemplateSpec extends FlatSpec
       sender = None
     )
 
-    template.requiredData should beValid(obj(Map(
-      "a" -> string,
-      "b" -> optString,
-      "c" -> obj(Map(
-        "x" -> string,
-        "y" -> string)),
-      "d" -> strings)))
+    template.requiredData should beValid(
+      obj(Map("a" -> string, "b" -> optString, "c" -> obj(Map("x" -> string, "y" -> string)), "d" -> strings)))
   }
 
 }

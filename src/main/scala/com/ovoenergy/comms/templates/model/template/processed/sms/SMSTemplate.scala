@@ -15,4 +15,3 @@ case class SMSTemplate[M[_]: Applicative](textBody: M[HandlebarsTemplate]) {
     Apply[M].map(textBody)(_.requiredData)
 
 }
-

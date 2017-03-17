@@ -19,7 +19,6 @@ object TemplatesContext {
 }
 
 case class TemplatesContext(
-                             templatesRetriever: TemplatesRetriever,
-                             parser: Parsing[HandlebarsTemplate]
-                           )
-
+    templatesRetriever: TemplatesRetriever,
+    parser: Parsing[HandlebarsTemplate]
+)
