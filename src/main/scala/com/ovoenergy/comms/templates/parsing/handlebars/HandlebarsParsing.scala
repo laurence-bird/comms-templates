@@ -3,6 +3,7 @@ package com.ovoenergy.comms.templates.parsing.handlebars
 import cats.Apply
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.either._
 import com.github.jknack.handlebars.Handlebars
 import com.ovoenergy.comms.model.Channel.{Email, SMS}
 import com.ovoenergy.comms.model.CustomerProfile
@@ -104,18 +105,28 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
   }
 
   private[handlebars] def resolvePartials(templateFile: TemplateFile): Either[String, String] = {
-    def retrieveAndReplacePartial(templateContent: String, templateFile: TemplateFile): Either[String, String] = {
-      partialsRegex.findFirstMatchIn(templateContent).map(_.group(1)) match {
-        case Some(partialName) =>
-          val partialContent = partialsRetriever.getSharedPartial(templateFile, partialName)
-          partialContent.right.flatMap { c =>
-            val processedContent = partialsRegex.replaceFirstIn(templateContent, c)
-            retrieveAndReplacePartial(processedContent, templateFile)
-          }
-        case None => Right(templateContent)
+    val MaxRecursionDepth = 10
+    def retrieveAndReplacePartial(templateContent: String,
+                                  templateFile: TemplateFile,
+                                  depth: Int): Either[String, String] = {
+      if (depth >= MaxRecursionDepth) {
+        Left("Encountered excessive recursion when expanding partials")
+      } else {
+        partialsRegex.findFirstMatchIn(templateContent).map(_.group(1)) match {
+          case Some(partialName) =>
+            // We recurse once to expand any partials referenced within the partial,
+            // then recurse again to process the rest of the original input
+            for {
+              partialContent         <- partialsRetriever.getSharedPartial(templateFile, partialName)
+              expandedPartialContent <- retrieveAndReplacePartial(partialContent, templateFile, depth + 1)
+              processedContent = partialsRegex.replaceFirstIn(templateContent, expandedPartialContent)
+              processRestOfInput <- retrieveAndReplacePartial(processedContent, templateFile, depth)
+            } yield processRestOfInput
+          case None => Right(templateContent)
+        }
       }
     }
-    retrieveAndReplacePartial(templateFile.content, templateFile)
+    retrieveAndReplacePartial(templateFile.content, templateFile, 0)
   }
 
   private[handlebars] def checkTemplateCompiles(input: String): Either[String, Unit] = {
