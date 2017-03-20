@@ -689,4 +689,24 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
           Valid(obj(Map("field1" -> string, "partialField" -> string, "field2" -> obj(Map("sub1" -> string)))))
       ))
   }
+
+  it should "avoid infinite recursion when expanding naughty partials" in {
+
+    val templateContent = "Hello {{> partialOne}}"
+
+    object partialsRetriever extends PartialsRetriever {
+      val responses: Map[String, Either[String, String]] =
+        Map(
+          "partialOne" -> Right("Hello {{> partialTwo}}"),
+          "partialTwo" -> Right("Hello {{> partialOne}}")
+        )
+      def getSharedPartial(referringFile: TemplateFile, partialName: String): Either[String, String] = {
+        responses.getOrElse(partialName, Left("Non mapped response"))
+      }
+    }
+    val templateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, templateContent)
+    new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should haveInvalid(
+      "Encountered excessive recursion when expanding partials"
+    )
+  }
 }
