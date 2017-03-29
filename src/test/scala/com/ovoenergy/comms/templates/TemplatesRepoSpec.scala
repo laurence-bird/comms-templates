@@ -5,6 +5,7 @@ import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.scalatest.ValidatedMatchers
 import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
+import com.ovoenergy.comms.templates.cache.CachingStrategy
 import com.ovoenergy.comms.templates.model.RequiredTemplateData.{obj, string}
 import com.ovoenergy.comms.templates.model.{FileFormat, HandlebarsTemplate, RequiredTemplateData}
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
@@ -38,7 +39,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]]     = None
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, NoOpParsing), commManifest) should
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               NoOpParsing,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) should
       haveInvalid("Template has no channels defined")
   }
 
@@ -48,7 +52,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
         Some(Invalid(NonEmptyList.of("Some error retrieving email template")))
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = None
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, NoOpParsing), commManifest) should
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               NoOpParsing,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) should
       haveInvalid("Some error retrieving email template")
   }
 
@@ -77,8 +84,11 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
         }
       }
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) should (haveInvalid(
-      "Error parsing subject") and haveInvalid("Error parsing htmlBody"))
+    TemplatesRepo.getTemplate(
+      TemplatesContext(MockTemplatesRetriever,
+                       Parser,
+                       CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+      commManifest) should (haveInvalid("Error parsing subject") and haveInvalid("Error parsing htmlBody"))
   }
 
   it should "process valid email template" in {
@@ -115,7 +125,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       email = Some(EmailTemplate[Id](parsedSubject, parsedHtmlBody, Some(parsedOther), None)),
       sms = None
     )
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) shouldBe Valid(exp)
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               Parser,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) shouldBe Valid(exp)
   }
 
   it should "handle errors retrieving SMS template" in {
@@ -124,7 +137,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] =
         Some(Invalid(NonEmptyList.of("Some error retrieving SMS template")))
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, NoOpParsing), commManifest) should
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               NoOpParsing,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) should
       haveInvalid("Some error retrieving SMS template")
   }
 
@@ -143,7 +159,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] =
         Invalid(NonEmptyList.of("Parsing error"))
     }
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) should
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               Parser,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) should
       haveInvalid("Parsing error")
   }
 
@@ -167,7 +186,10 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       email = None,
       sms = Some(SMSTemplate[Id](parsedBody))
     )
-    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever, Parser), commManifest) shouldBe Valid(exp)
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               Parser,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) shouldBe Valid(exp)
   }
 
 }
