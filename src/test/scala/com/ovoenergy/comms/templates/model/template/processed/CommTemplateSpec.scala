@@ -23,14 +23,14 @@ class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
     val template = CommTemplate[Id](
       email = Some(
         EmailTemplate[Id](
-          subject = HandlebarsTemplate("", Valid(reqData1)),
-          htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-          textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+          subject = HandlebarsTemplate("", reqData1),
+          htmlBody = HandlebarsTemplate("", reqData2),
+          textBody = Some(HandlebarsTemplate("", reqData3)),
           sender = None
         )),
       sms = Some(
         SMSTemplate[Id](
-          textBody = HandlebarsTemplate("", Valid(reqData4))
+          textBody = HandlebarsTemplate("", reqData4)
         ))
     )
 
@@ -48,14 +48,14 @@ class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
     val template = CommTemplate[Id](
       email = Some(
         EmailTemplate[Id](
-          subject = HandlebarsTemplate("", Valid(reqData1)),
-          htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-          textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+          subject = HandlebarsTemplate("", reqData1),
+          htmlBody = HandlebarsTemplate("", reqData2),
+          textBody = Some(HandlebarsTemplate("", reqData3)),
           sender = None
         )),
       sms = Some(
         SMSTemplate[Id](
-          textBody = HandlebarsTemplate("", Valid(conflictingReqData))
+          textBody = HandlebarsTemplate("", conflictingReqData)
         ))
     )
 

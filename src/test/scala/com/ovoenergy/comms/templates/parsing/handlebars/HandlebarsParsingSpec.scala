@@ -5,14 +5,12 @@ import cats.scalatest.ValidatedMatchers
 import com.ovoenergy.comms.model.Channel.Email
 import com.ovoenergy.comms.model.{Channel, CommType}
 import com.ovoenergy.comms.model.CommType.Service
-import com.ovoenergy.comms.templates.model.variables.System
 import com.ovoenergy.comms.templates.model.FileFormat.Html
 import com.ovoenergy.comms.templates.model.{FileFormat, HandlebarsTemplate, RequiredTemplateData}
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.parsing.handlebars.HandlebarsParsingProps.noOpPartialsRetriever
 import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalatest._
-import shapeless.HList
 import RequiredTemplateData._
 
 class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatchers {
@@ -685,8 +683,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
       HandlebarsTemplate(
         rawExpandedContent =
           "A load of variables {{profile.firstName}} {{system.year}} {{recipient.emailAddress}} {{field1}} {{field2.sub1}} A partial {{partialField}} {{profile.lastName}}",
-        requiredData =
-          Valid(obj(Map("field1" -> string, "partialField" -> string, "field2" -> obj(Map("sub1" -> string)))))
+        requiredData = obj(Map("field1" -> string, "partialField" -> string, "field2" -> obj(Map("sub1" -> string))))
       ))
   }
 

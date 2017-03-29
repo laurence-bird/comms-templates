@@ -73,7 +73,7 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
         templateFile match {
           case s if s == subject  => Invalid(NonEmptyList.of("Error parsing subject"))
           case b if b == htmlBody => Invalid(NonEmptyList.of("Error parsing htmlBody"))
-          case _                  => Valid(HandlebarsTemplate("Rendered template", Valid(obj(requiredData))))
+          case _                  => Valid(HandlebarsTemplate("Rendered template", obj(requiredData)))
         }
       }
     }
@@ -98,9 +98,9 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = None
     }
 
-    val parsedSubject  = HandlebarsTemplate("Rendered subject", Valid(obj(requiredData)))
-    val parsedHtmlBody = HandlebarsTemplate("Rendered html body", Valid(obj(requiredData)))
-    val parsedOther    = HandlebarsTemplate("Rendered other", Valid(obj(requiredData)))
+    val parsedSubject  = HandlebarsTemplate("Rendered subject", obj(requiredData))
+    val parsedHtmlBody = HandlebarsTemplate("Rendered html body", obj(requiredData))
+    val parsedOther    = HandlebarsTemplate("Rendered other", obj(requiredData))
     object Parser extends Parsing[HandlebarsTemplate] {
       override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
         templateFile match {
@@ -158,7 +158,7 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
             )))
     }
 
-    val parsedBody = HandlebarsTemplate("Rendered SMS body", Valid(obj(requiredData)))
+    val parsedBody = HandlebarsTemplate("Rendered SMS body", obj(requiredData))
     object Parser extends Parsing[HandlebarsTemplate] {
       override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = Valid(parsedBody)
     }

@@ -1,5 +1,6 @@
 package com.ovoenergy.comms.templates.model.template.processed.sms
 
+import cats.data.Validated.Valid
 import cats.{Applicative, Apply, Id}
 import com.ovoenergy.comms.templates._
 import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData}
@@ -12,6 +13,6 @@ case class SMSTemplate[M[_]: Applicative](textBody: M[HandlebarsTemplate]) {
     Apply[M].map(textBody)(SMSTemplate[Id])
 
   def requiredData: M[ErrorsOr[RequiredTemplateData.obj]] =
-    Apply[M].map(textBody)(_.requiredData)
+    Apply[M].map(textBody)(tb => Valid(tb.requiredData))
 
 }

@@ -20,9 +20,9 @@ class EmailTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   it should "combine the required data from parts forming the template" in {
     val template = EmailTemplate[Id](
-      subject = HandlebarsTemplate("", Valid(reqData1)),
-      htmlBody = HandlebarsTemplate("", Valid(reqData2)),
-      textBody = Some(HandlebarsTemplate("", Valid(reqData3))),
+      subject = HandlebarsTemplate("", reqData1),
+      htmlBody = HandlebarsTemplate("", reqData2),
+      textBody = Some(HandlebarsTemplate("", reqData3)),
       sender = None
     )
 
@@ -36,8 +36,8 @@ class EmailTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   it should "combine the required data from parts forming the template no Text Body" in {
     val template = EmailTemplate[Id](
-      subject = HandlebarsTemplate("", Valid(reqData1)),
-      htmlBody = HandlebarsTemplate("", Valid(reqData2)),
+      subject = HandlebarsTemplate("", reqData1),
+      htmlBody = HandlebarsTemplate("", reqData2),
       textBody = None,
       sender = None
     )
