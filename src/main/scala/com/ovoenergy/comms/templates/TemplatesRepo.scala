@@ -11,13 +11,14 @@ import scala.language.higherKinds
 
 object TemplatesRepo {
 
-  def getTemplate(context: TemplatesContext, commManifest: CommManifest): ErrorsOr[CommTemplate[Id]] = {
-    val commTemplate = CommTemplate[ErrorsOr](
-      email = getEmailTemplate(context, commManifest),
-      sms = getSMSTemplate(context, commManifest)
-    )
-    commTemplate.checkAtLeastOneChannelDefined andThen (_ => commTemplate.aggregate)
-  }
+  def getTemplate(context: TemplatesContext, commManifest: CommManifest): ErrorsOr[CommTemplate[Id]] =
+    context.cachingStrategy.get(commManifest) {
+      val commTemplate = CommTemplate[ErrorsOr](
+        email = getEmailTemplate(context, commManifest),
+        sms = getSMSTemplate(context, commManifest)
+      )
+      commTemplate.checkAtLeastOneChannelDefined andThen (_ => commTemplate.aggregate)
+    }
 
   private def getEmailTemplate(context: TemplatesContext,
                                commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
