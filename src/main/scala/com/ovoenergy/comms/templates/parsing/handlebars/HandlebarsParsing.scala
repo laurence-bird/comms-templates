@@ -34,6 +34,7 @@ object HandlebarsParsing {
     val channelSpecificValidations = templateFile.channel match {
       case Email => validateProvidedDataType(requiredData, "recipient", classOf[EmailRecipient])
       case SMS   => validateProvidedDataType(requiredData, "recipient", classOf[SMSRecipient])
+      case _     => Valid(())
     }
 
     Apply[ErrorsOr].map3(systemValidations, profileValidations, channelSpecificValidations) {
@@ -74,13 +75,16 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
         contentIncludingPartials <- resolvePartials(templateFile).right
         _                        <- checkTemplateCompiles(contentIncludingPartials).right
       } yield {
-        buildRequiredTemplateData(contentIncludingPartials) match {
-          case Valid(data) =>
-            HandlebarsTemplate(contentIncludingPartials,
-                               HandlebarsParsing.processProvidedDataFields(data, templateFile))
-          case invalid => HandlebarsTemplate(contentIncludingPartials, invalid)
-        }
+        buildAndValidateRequiredData(contentIncludingPartials, templateFile)
+          .map(data => HandlebarsTemplate(contentIncludingPartials, data))
       }
+    }
+  }
+
+  private def buildAndValidateRequiredData(contentIncludingPartials: String,
+                                           templateFile: TemplateFile): ErrorsOr[RequiredTemplateData.obj] = {
+    buildRequiredTemplateData(contentIncludingPartials) andThen { data =>
+      HandlebarsParsing.processProvidedDataFields(data, templateFile)
     }
   }
 
@@ -138,9 +142,9 @@ class HandlebarsParsing(partialsRetriever: PartialsRetriever) extends Parsing[Ha
     }
   }
 
-  private def eitherToErrorsOr[A](either: Either[String, A]): ErrorsOr[A] = {
+  private def eitherToErrorsOr[A](either: Either[String, ErrorsOr[A]]): ErrorsOr[A] = {
     either match {
-      case Right(result) => Valid(result)
+      case Right(result) => result
       case Left(error)   => Invalid(NonEmptyList.of(error))
     }
   }

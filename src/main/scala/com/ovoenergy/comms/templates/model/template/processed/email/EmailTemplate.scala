@@ -26,9 +26,9 @@ case class EmailTemplate[M[_]: Applicative](
     import cats.instances.list._
     (subject |@| htmlBody |@| textBody.sequenceU) map {
       case (s, h, t) =>
-        val templates: List[HandlebarsTemplate]                     = List(Some(s), Some(h), t).flatten
-        val requiredDatas: ErrorsOr[List[RequiredTemplateData.obj]] = templates.map(_.requiredData).sequenceU
-        requiredDatas.andThen(RequiredTemplateData.combine)
+        val templates: List[HandlebarsTemplate]           = List(Some(s), Some(h), t).flatten
+        val requiredDatas: List[RequiredTemplateData.obj] = templates.map(_.requiredData)
+        RequiredTemplateData.combine(requiredDatas)
     }
   }
 }

@@ -9,5 +9,5 @@ import com.ovoenergy.comms.templates.ErrorsOr
   */
 case class HandlebarsTemplate(
     rawExpandedContent: String,
-    requiredData: ErrorsOr[RequiredTemplateData.obj]
+    requiredData: RequiredTemplateData.obj
 )
