@@ -3,7 +3,7 @@ package com.ovoenergy.comms.templates.retriever
 import cats.Apply
 import cats.data.{NonEmptyList, Validated}
 import cats.instances.option._
-import com.ovoenergy.comms.model.{Channel, CommManifest}
+import com.ovoenergy.comms.model._
 import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model._
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
@@ -29,26 +29,26 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
   }
 
   def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = {
-    if (s3Client.listFiles(templatePrefix(Channel.Email, commManifest)).isEmpty) {
+    if (s3Client.listFiles(templatePrefix(Email, commManifest)).isEmpty) {
       log.debug(s"No email template found for $commManifest")
       None
     } else {
       val subject: ErrorsOr[TemplateFile] = {
-        val option = s3File(Filenames.Email.Subject, Channel.Email, commManifest)
-          .map(TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, _))
+        val option = s3File(Filenames.Email.Subject, Email, commManifest)
+          .map(TemplateFile(commManifest.commType, Email, FileFormat.Text, _))
         Validated.fromOption(option, ifNone = NonEmptyList.of("Subject file not found on S3"))
       }
 
       val htmlBody: ErrorsOr[TemplateFile] = {
-        val option = s3File(Filenames.Email.HtmlBody, Channel.Email, commManifest)
-          .map(TemplateFile(commManifest.commType, Channel.Email, FileFormat.Html, _))
+        val option = s3File(Filenames.Email.HtmlBody, Email, commManifest)
+          .map(TemplateFile(commManifest.commType, Email, FileFormat.Html, _))
         Validated.fromOption(option, ifNone = NonEmptyList.of("HTML body file not found on S3"))
       }
 
-      val textBody: Option[TemplateFile] = s3File(Filenames.Email.TextBody, Channel.Email, commManifest)
-        .map(TemplateFile(commManifest.commType, Channel.Email, FileFormat.Text, _))
+      val textBody: Option[TemplateFile] = s3File(Filenames.Email.TextBody, Email, commManifest)
+        .map(TemplateFile(commManifest.commType, Email, FileFormat.Text, _))
 
-      val customSender: Option[String] = s3File(Filenames.Email.Sender, Channel.Email, commManifest)
+      val customSender: Option[String] = s3File(Filenames.Email.Sender, Email, commManifest)
 
       Some(
         Apply[ErrorsOr]
@@ -65,13 +65,13 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
   }
 
   override def getSMSTemplate(commManifest: CommManifest): Option[ErrorsOr[SMSTemplateFiles]] = {
-    if (s3Client.listFiles(templatePrefix(Channel.SMS, commManifest)).isEmpty) {
+    if (s3Client.listFiles(templatePrefix(SMS, commManifest)).isEmpty) {
       log.debug(s"No SMS template found for $commManifest")
       None
     } else {
       val textBody: ErrorsOr[TemplateFile] = {
-        val option = s3File(Filenames.SMS.TextBody, Channel.SMS, commManifest)
-          .map(TemplateFile(commManifest.commType, Channel.SMS, FileFormat.Text, _))
+        val option = s3File(Filenames.SMS.TextBody, SMS, commManifest)
+          .map(TemplateFile(commManifest.commType, SMS, FileFormat.Text, _))
         Validated.fromOption(option, ifNone = NonEmptyList.of("Text body file not found on S3"))
       }
       Some(textBody.map(SMSTemplateFiles))

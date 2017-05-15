@@ -5,7 +5,7 @@ import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.syntax.either._
 import com.github.jknack.handlebars.Handlebars
-import com.ovoenergy.comms.model.Channel.{Email, SMS}
+import com.ovoenergy.comms.model.{Email, SMS}
 import com.ovoenergy.comms.model.CustomerProfile
 import com.ovoenergy.comms.templates.model.variables.{EmailRecipient, SMSRecipient, System}
 import com.ovoenergy.comms.templates._
