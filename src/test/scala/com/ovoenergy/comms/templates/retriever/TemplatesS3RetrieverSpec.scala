@@ -1,7 +1,7 @@
 package com.ovoenergy.comms.templates.retriever
 
 import cats.scalatest.ValidatedMatchers
-import com.ovoenergy.comms.model.{Channel, CommManifest, CommType}
+import com.ovoenergy.comms.model._
 import com.ovoenergy.comms.templates.model.FileFormat
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.template.files.email.EmailTemplateFiles
@@ -17,7 +17,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
   }
 
   val someHtml     = "<!DOCTYPE html>\n<html>\n<body>\n<div>Random text</div>\n</body>\n</html>"
-  val commManifest = CommManifest(CommType.Service, "cc-payment-taken", "0.3")
+  val commManifest = CommManifest(Service, "cc-payment-taken", "0.3")
 
   behavior of "TemplatesS3Retriever for emails"
 
@@ -37,8 +37,8 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
 
     new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest).get should beValid(
       EmailTemplateFiles(
-        subject = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "the subject"),
-        htmlBody = TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, someHtml),
+        subject = TemplateFile(Service, Email, FileFormat.Text, "the subject"),
+        htmlBody = TemplateFile(Service, Email, FileFormat.Html, someHtml),
         textBody = None,
         sender = None
       ))
@@ -64,9 +64,9 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
 
     new TemplatesS3Retriever(s3client).getEmailTemplate(commManifest).get should beValid(
       EmailTemplateFiles(
-        subject = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "the subject"),
-        htmlBody = TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, someHtml),
-        textBody = Some(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "text body")),
+        subject = TemplateFile(Service, Email, FileFormat.Text, "the subject"),
+        htmlBody = TemplateFile(Service, Email, FileFormat.Html, someHtml),
+        textBody = Some(TemplateFile(Service, Email, FileFormat.Text, "text body")),
         sender = Some("Steve <awesome@email.com>")
       ))
   }
@@ -122,7 +122,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
 
     new TemplatesS3Retriever(s3client).getSMSTemplate(commManifest).get should beValid(
       SMSTemplateFiles(
-        textBody = TemplateFile(CommType.Service, Channel.SMS, FileFormat.Text, "the SMS body")
+        textBody = TemplateFile(Service, SMS, FileFormat.Text, "the SMS body")
       ))
   }
 

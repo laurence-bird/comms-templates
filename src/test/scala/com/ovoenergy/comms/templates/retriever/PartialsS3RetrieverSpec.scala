@@ -1,6 +1,6 @@
 package com.ovoenergy.comms.templates.retriever
 
-import com.ovoenergy.comms.model.{Channel, CommType}
+import com.ovoenergy.comms.model._
 import com.ovoenergy.comms.templates.model.FileFormat
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.s3.S3Client
@@ -35,18 +35,18 @@ class PartialsS3RetrieverSpec extends FlatSpec with Matchers with EitherValues {
   behavior of "Partials Repo for emails"
 
   it should "get html partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Html, ""), "header") shouldBe Right(
+    testObj.getSharedPartial(TemplateFile(Service, Email, FileFormat.Html, ""), "header") shouldBe Right(
       "the HTML header")
   }
 
   it should "get text partials" in {
-    testObj.getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "header") shouldBe Right(
+    testObj.getSharedPartial(TemplateFile(Service, Email, FileFormat.Text, ""), "header") shouldBe Right(
       "the text header")
   }
 
   it should "fail if partial not present" in {
     testObj
-      .getSharedPartial(TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, ""), "whatevs")
+      .getSharedPartial(TemplateFile(Service, Email, FileFormat.Text, ""), "whatevs")
       .left
       .value should include("Could not find shared partial")
   }

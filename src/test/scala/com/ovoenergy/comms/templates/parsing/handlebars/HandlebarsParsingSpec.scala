@@ -2,9 +2,7 @@ package com.ovoenergy.comms.templates.parsing.handlebars
 
 import cats.data.Validated.Valid
 import cats.scalatest.ValidatedMatchers
-import com.ovoenergy.comms.model.Channel.Email
-import com.ovoenergy.comms.model.{Channel, CommType}
-import com.ovoenergy.comms.model.CommType.Service
+import com.ovoenergy.comms.model._
 import com.ovoenergy.comms.templates.model.FileFormat.Html
 import com.ovoenergy.comms.templates.model.{FileFormat, HandlebarsTemplate, RequiredTemplateData}
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
@@ -15,8 +13,8 @@ import RequiredTemplateData._
 
 class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
-  val emailTemplateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, "")
-  val smsTemplateFile   = TemplateFile(CommType.Service, Channel.SMS, FileFormat.Text, "")
+  val emailTemplateFile = TemplateFile(Service, Email, FileFormat.Text, "")
+  val smsTemplateFile   = TemplateFile(Service, SMS, FileFormat.Text, "")
 
   behavior of "#buildRequiredTemplateData"
 
@@ -678,7 +676,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
         responses.getOrElse(partialName, Left("Non mapped response"))
       }
     }
-    val templateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, templateContent)
+    val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
     new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should beValid(
       HandlebarsTemplate(
         rawExpandedContent =
@@ -701,7 +699,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
         responses.getOrElse(partialName, Left("Non mapped response"))
       }
     }
-    val templateFile = TemplateFile(CommType.Service, Channel.Email, FileFormat.Text, templateContent)
+    val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
     new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should haveInvalid(
       "Encountered excessive recursion when expanding partials"
     )
