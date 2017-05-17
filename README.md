@@ -40,14 +40,14 @@ Using the provided (non-caching) TemplateContext, we can retrieve the details of
 ```scala
 import cats.data.Validated.Valid
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
-import com.ovoenergy.comms.model.{CommManifest, CommType}
+import com.ovoenergy.comms.model.{CommManifest, CommType, Service}
 import com.ovoenergy.comms.templates.{TemplatesContext, TemplatesRepo}
 
 object Example extends App {
 
   val creds = new EnvironmentVariableCredentialsProvider()
   val context = TemplatesContext.nonCachingContext(creds)
-  val manifest = CommManifest(CommType.Service, "cc-payment-taken", "0.3")
+  val manifest = CommManifest(Service, "cc-payment-taken", "0.3")
 
   TemplatesRepo.getTemplate(context, manifest) match {
     case Valid(template) =>
