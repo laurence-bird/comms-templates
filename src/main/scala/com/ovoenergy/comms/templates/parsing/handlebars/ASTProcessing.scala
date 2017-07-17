@@ -168,7 +168,7 @@ private[parsing] object ASTProcessing {
           markAsConflict()
         } else {
           obj.get(key.last) match {
-            case Some(Str(_)) => // already inserted, nothing to do
+            case Some(Str(_)) | Some(Opt(Str(_))) => // already inserted, nothing to do
             case None | Some(StrOrObj(_)) =>
               obj.put(key.last, Str(markAsConflict = () => obj.put(key.last, Conflict(rawKey))))
             case Some(Opt(StrOrObj(replaceWith))) =>
