@@ -405,6 +405,21 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
               ))
   }
 
+  it should "work with optional values within nested conditionals " in {
+    val input =
+      """
+        |                        {{#if newSupplier}}
+        |                            {{#if dualFuel}}
+        |                                As of today, {{newSupplier}} supplies your gas and electricity. Here's what happens next.
+        |                            {{else}}
+        |                                As of today, {{newSupplier}} supplies your {{fuelType}}. Here's what happens next.
+        |                            {{/if}}
+        |                        {{/if}}
+      """.stripMargin
+
+    testValid(input, Map("dualFuel" -> optString, "fuelType" -> string, "newSupplier" -> optString))
+  }
+
   it should "recognise a conflict if a field is both a string and an object" in {
     val input =
       """
