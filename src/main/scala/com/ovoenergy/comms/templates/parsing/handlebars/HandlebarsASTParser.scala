@@ -52,6 +52,7 @@ private[parsing] class HandlebarsASTParser(val input: ParserInput) extends Parse
     Each | If | SimpleDoubleCurlies | SimpleTripleCurlies
   }
 
+  // <html>{{#if a}}<p>{{c}}</p>{{/if}} <p>{{b}}</p></html>
   private def Template: Rule1[Seq[HandlebarsAST]] = rule { RawText ~ zeroOrMore(Block).separatedBy(RawText) ~ RawText }
 
   /**

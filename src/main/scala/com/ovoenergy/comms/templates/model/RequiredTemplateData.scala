@@ -26,6 +26,7 @@ object RequiredTemplateData {
     * i.e. if the same node being referenced as two different types.
     */
   def combine(requiredTemplateDatas: List[RequiredTemplateData.obj]): ErrorsOr[RequiredTemplateData.obj] = {
+
     requiredTemplateDatas.foldLeft[ErrorsOr[RequiredTemplateData.obj]](Valid(RequiredTemplateData.obj(Map()))) {
       case (Valid(requireData), x) => combine2(requireData, x)
       case (invalid, _)            => invalid

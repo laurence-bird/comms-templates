@@ -8,6 +8,7 @@ import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model._
 import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.template.files.email.EmailTemplateFiles
+import com.ovoenergy.comms.templates.model.template.files.print.PrintTemplateFiles
 import com.ovoenergy.comms.templates.model.template.files.sms.SMSTemplateFiles
 import com.ovoenergy.comms.templates.s3.S3Client
 import org.slf4j.LoggerFactory
@@ -25,6 +26,11 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
     }
     object SMS {
       val TextBody = "body.txt"
+    }
+    object Print {
+      val header = "header.html"
+      val body   = "body.html"
+      val footer = "footer.html"
     }
   }
 
@@ -59,6 +65,41 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
                 htmlBody = html,
                 textBody = textBody,
                 sender = customSender
+              )
+          })
+    }
+  }
+
+  override def getPrintTemplate(commManifest: CommManifest): Option[ErrorsOr[PrintTemplateFiles]] = {
+    if (s3Client.listFiles(templatePrefix(Post, commManifest)).isEmpty) {
+      log.debug(s"No print template found for $commManifest") // TODO: update comms kafka messages, change post to print
+      None
+    } else {
+
+      val header: Option[TemplateFile] = {
+        s3File(Filenames.Print.header, Post, commManifest)
+          .map(TemplateFile(commManifest.commType, Post, FileFormat.Text, _))
+      }
+
+      val body: ErrorsOr[TemplateFile] = {
+        val option = s3File(Filenames.Print.body, Post, commManifest)
+          .map(TemplateFile(commManifest.commType, Post, FileFormat.Html, _))
+        Validated.fromOption(option, ifNone = NonEmptyList.of("HTML body file not found on S3"))
+      }
+
+      val footer: Option[TemplateFile] = {
+        s3File(Filenames.Print.footer, Post, commManifest)
+          .map(TemplateFile(commManifest.commType, Post, FileFormat.Text, _))
+      }
+
+      Some(
+        Apply[ErrorsOr]
+          .map(body) {
+            case (b) =>
+              PrintTemplateFiles(
+                body = b,
+                header = header,
+                footer = footer
               )
           })
     }
