@@ -3,6 +3,7 @@ package com.ovoenergy.comms.templates.retriever
 import cats.Apply
 import cats.data.{NonEmptyList, Validated}
 import cats.instances.option._
+import cats.implicits._
 import com.ovoenergy.comms.model._
 import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model._
@@ -57,16 +58,11 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       val customSender: Option[String] = s3File(Filenames.Email.Sender, Email, commManifest)
 
       Some(
-        Apply[ErrorsOr]
-          .map2(subject, htmlBody) {
-            case (sub, html) =>
-              EmailTemplateFiles(
-                subject = sub,
-                htmlBody = html,
-                textBody = textBody,
-                sender = customSender
-              )
-          })
+        (subject |@| htmlBody) map {
+          case (a, b) =>
+            EmailTemplateFiles(a, b, textBody, customSender)
+        }
+      )
     }
   }
 
@@ -93,15 +89,8 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       }
 
       Some(
-        Apply[ErrorsOr]
-          .map(body) {
-            case (b) =>
-              PrintTemplateFiles(
-                body = b,
-                header = header,
-                footer = footer
-              )
-          })
+        body.map(PrintTemplateFiles(_, header, footer))
+      )
     }
   }
 

@@ -29,9 +29,9 @@ class PrintTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
     template.requiredData should beValid(
       obj(
         Map("a" -> string,
-          "b" -> optString,
-          "c" -> obj(Map("x" -> string, "y" -> string, "z" -> string)),
-          "d" -> strings)))
+            "b" -> optString,
+            "c" -> obj(Map("x" -> string, "y" -> string, "z" -> string)),
+            "d" -> strings)))
   }
 
   it should "combine the required data from parts forming the template no Text Body" in {

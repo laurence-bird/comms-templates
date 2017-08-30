@@ -11,11 +11,11 @@ import com.ovoenergy.comms.templates.ErrorsOr
 import scala.language.higherKinds
 import com.ovoenergy.comms.templates.model.{HandlebarsTemplate, RequiredTemplateData}
 
-case class PrintTemplate[M[_]:Applicative](
-                                           body: M[HandlebarsTemplate],
-                                           header: Option[M[HandlebarsTemplate]],
-                                           footer: Option[M[HandlebarsTemplate]]
-                                           ){
+case class PrintTemplate[M[_]: Applicative](
+    body: M[HandlebarsTemplate],
+    header: Option[M[HandlebarsTemplate]],
+    footer: Option[M[HandlebarsTemplate]]
+) {
   def aggregate: M[PrintTemplate[Id]] = {
     (body |@| header.sequenceU |@| footer.sequenceU) map {
       PrintTemplate[Id](_, _, _)

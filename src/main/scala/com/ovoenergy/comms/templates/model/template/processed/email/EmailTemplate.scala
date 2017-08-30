@@ -3,7 +3,7 @@ package com.ovoenergy.comms.templates.model.template.processed.email
 import cats.instances.option._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
-import cats.{Applicative, Id}
+import cats.{Applicative, Apply, Id}
 import com.ovoenergy.comms.templates._
 import com.ovoenergy.comms.templates.model.{EmailSender, HandlebarsTemplate, RequiredTemplateData}
 
