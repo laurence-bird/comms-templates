@@ -51,13 +51,13 @@ object TemplatesRepo {
 
   private def getPrintTemplate(context: TemplatesContext,
                                commManifest: CommManifest): Option[ErrorsOr[PrintTemplate[Id]]] = {
+
     val parser = context.parser.parseTemplate _
+
     context.templatesRetriever.getPrintTemplate(commManifest).map {
       _ andThen { t =>
-        val header = t.header map (parser(_))
-        val body   = parser(t.body)
-        val footer = t.footer map (parser(_))
-        PrintTemplate[ErrorsOr](header = header, body = body, footer = footer).aggregate
+        val body = parser(t.body)
+        PrintTemplate[ErrorsOr](body).aggregate
       }
     }
   }

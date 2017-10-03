@@ -29,9 +29,7 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       val TextBody = "body.txt"
     }
     object Print {
-      val header = "header.html"
-      val body   = "body.html"
-      val footer = "footer.html"
+      val body = "body.html"
     }
   }
 
@@ -72,25 +70,13 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       None
     } else {
 
-      val header: Option[TemplateFile] = {
-        s3File(Filenames.Print.header, Post, commManifest)
-          .map(TemplateFile(commManifest.commType, Post, FileFormat.Text, _))
-      }
-
       val body: ErrorsOr[TemplateFile] = {
         val option = s3File(Filenames.Print.body, Post, commManifest)
           .map(TemplateFile(commManifest.commType, Post, FileFormat.Html, _))
         Validated.fromOption(option, ifNone = NonEmptyList.of("HTML body file not found on S3"))
       }
 
-      val footer: Option[TemplateFile] = {
-        s3File(Filenames.Print.footer, Post, commManifest)
-          .map(TemplateFile(commManifest.commType, Post, FileFormat.Text, _))
-      }
-
-      Some(
-        body.map(PrintTemplateFiles(_, header, footer))
-      )
+      Some(body.map(PrintTemplateFiles(_)))
     }
   }
 

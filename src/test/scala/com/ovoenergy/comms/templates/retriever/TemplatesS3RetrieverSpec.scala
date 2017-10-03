@@ -142,24 +142,18 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
   it should "handle basic template" in {
     val s3client = s3(
       contents = Map(
-        "service/cc-payment-taken/0.3/post/header.html" -> "the header",
-        "service/cc-payment-taken/0.3/post/body.html"   -> someHtml,
-        "service/cc-payment-taken/0.3/post/footer.html" -> "the footer"
+        "service/cc-payment-taken/0.3/post/body.html" -> someHtml
       ),
       files = Map(
         "service/cc-payment-taken/0.3/post" -> Seq(
-          "service/cc-payment-taken/0.3/post/header.html",
-          "service/cc-payment-taken/0.3/post/body.html",
-          "service/cc-payment-taken/0.3/post/footer.html"
+          "service/cc-payment-taken/0.3/post/body.html"
         )
       )
     )
 
     new TemplatesS3Retriever(s3client).getPrintTemplate(commManifest).get should beValid(
       PrintTemplateFiles(
-        header = Some(TemplateFile(Service, Post, FileFormat.Text, "the header")),
-        body = TemplateFile(Service, Post, FileFormat.Html, someHtml),
-        footer = Some(TemplateFile(Service, Post, FileFormat.Text, "the footer"))
+        body = TemplateFile(Service, Post, FileFormat.Html, someHtml)
       )
     )
 
@@ -200,9 +194,7 @@ class TemplatesS3RetrieverSpec extends FlatSpec with Matchers with ValidatedMatc
 
     new TemplatesS3Retriever(s3client).getPrintTemplate(commManifest).get should beValid(
       PrintTemplateFiles(
-        header = None,
-        body = TemplateFile(Service, Post, FileFormat.Html, someHtml),
-        footer = Some(TemplateFile(Service, Post, FileFormat.Text, "the footer"))
+        body = TemplateFile(Service, Post, FileFormat.Html, someHtml)
       )
     )
   }

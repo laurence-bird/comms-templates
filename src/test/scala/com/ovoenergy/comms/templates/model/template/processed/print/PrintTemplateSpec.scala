@@ -20,25 +20,14 @@ class PrintTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
   val reqData3 = obj(Map("b" -> optString, "c" -> obj(Map("z" -> string)), "d" -> strings))
 
   it should "combine the required data from parts forming the template" in {
-    val template = PrintTemplate[Id](
-      header = Some(HandlebarsTemplate("", reqData1)),
-      body = HandlebarsTemplate("", reqData2),
-      footer = Some(HandlebarsTemplate("", reqData3))
-    )
+    val template = PrintTemplate[Id](HandlebarsTemplate("", reqData2))
 
-    template.requiredData should beValid(
-      obj(
-        Map("a" -> string,
-            "b" -> optString,
-            "c" -> obj(Map("x" -> string, "y" -> string, "z" -> string)),
-            "d" -> strings)))
+    template.requiredData should beValid(obj(Map("b" -> optString, "c" -> obj(Map("y" -> string)), "d" -> strings)))
   }
 
   it should "combine the required data from parts forming the template no Text Body" in {
     val template = PrintTemplate[Id](
-      header = None,
-      body = HandlebarsTemplate("", reqData2),
-      footer = None
+      body = HandlebarsTemplate("", reqData2)
     )
 
     template.requiredData should beValid(obj(Map("b" -> optString, "c" -> obj(Map("y" -> string)), "d" -> strings)))
@@ -46,25 +35,11 @@ class PrintTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   it should "Combine error messages from invalid templates" in {
     val template = PrintTemplate[ErrorsOr](
-      header = Some(Invalid(NonEmptyList[String]("Invalid header template", Nil))),
-      body = Invalid(NonEmptyList[String]("Invalid body", Nil)),
-      footer = None
+      body = Invalid(NonEmptyList[String]("Invalid body", Nil))
     )
 
     template.requiredData should beInvalid(
-      NonEmptyList.fromList(List("Invalid body", "Invalid header template")).get
-    )
-  }
-
-  it should "return appropriate error message, if both valid and invalid templates are returned" in {
-    val template = PrintTemplate[ErrorsOr](
-      header = Some(Invalid(NonEmptyList[String]("Invalid header template", Nil))),
-      body = Valid(HandlebarsTemplate("", reqData2)),
-      footer = None
-    )
-
-    template.requiredData should beInvalid(
-      NonEmptyList.fromList(List("Invalid header template")).get
+      NonEmptyList.fromList(List("Invalid body")).get
     )
   }
 }
