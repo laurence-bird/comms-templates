@@ -218,11 +218,9 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def getPrintTemplate(commManifest: CommManifest): Option[ErrorsOr[PrintTemplateFiles]] =
         Some(
           Valid(
-            PrintTemplateFiles(
-              header = Some(header),
-              body = body,
-              footer = Some(footer)
-            )))
+            PrintTemplateFiles(body)
+          )
+        )
     }
 
     val parsedHeader   = HandlebarsTemplate("Rendered header", obj(requiredData))
@@ -243,7 +241,7 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
     val exp = CommTemplate[Id](
       email = None,
       sms = None,
-      print = Some(PrintTemplate[Id](header = Some(parsedHeader), body = parsedHtmlBody, footer = Some(parsedFooter)))
+      print = Some(PrintTemplate[Id](parsedHtmlBody))
     )
 
     TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
@@ -267,9 +265,7 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
   }
 
   it should "handle errors parsing print template" in {
-    val header = TemplateFile(commManifest.commType, Post, FileFormat.Text, "The Header")
-    val body   = TemplateFile(commManifest.commType, Post, FileFormat.Html, "The Html Body")
-    val footer = TemplateFile(commManifest.commType, Post, FileFormat.Text, "Footer")
+    val body = TemplateFile(commManifest.commType, Post, FileFormat.Html, "The Html Body")
 
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
@@ -277,28 +273,23 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
       override def getPrintTemplate(commManifest: CommManifest): Option[ErrorsOr[PrintTemplateFiles]] =
         Some(
           Valid(
-            PrintTemplateFiles(
-              header = Some(header),
-              body = body,
-              footer = Some(footer)
-            )))
+            PrintTemplateFiles(body)
+          )
+        )
     }
 
     object Parser extends Parsing[HandlebarsTemplate] {
       override def parseTemplate(templateFile: TemplateFile): ErrorsOr[HandlebarsTemplate] = {
         templateFile match {
-          case h if h == header => Invalid(NonEmptyList.of("Error parsing header"))
-          case b if b == body   => Invalid(NonEmptyList.of("Error parsing htmlBody"))
-          case f if f == footer => Valid(HandlebarsTemplate("Rendered template", obj(requiredData)))
-          case _                => fail()
+          case b if b == body => Invalid(NonEmptyList.of("Error parsing htmlBody"))
+          case _              => fail()
         }
       }
     }
-    TemplatesRepo.getTemplate(
-      TemplatesContext(MockTemplatesRetriever,
-                       Parser,
-                       CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
-      commManifest) should (haveInvalid("Error parsing header") and haveInvalid("Error parsing htmlBody"))
+    TemplatesRepo.getTemplate(TemplatesContext(MockTemplatesRetriever,
+                                               Parser,
+                                               CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]),
+                              commManifest) should (haveInvalid("Error parsing htmlBody"))
   }
 
 }

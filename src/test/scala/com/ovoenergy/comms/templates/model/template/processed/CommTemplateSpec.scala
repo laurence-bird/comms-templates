@@ -36,11 +36,7 @@ class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
     ))
 
   val print = Some(
-    PrintTemplate[Id](
-      body = HandlebarsTemplate("", reqData5),
-      header = Some(HandlebarsTemplate("", reqData2)),
-      footer = Some(HandlebarsTemplate("", reqData3))
-    )
+    PrintTemplate[Id](HandlebarsTemplate("", reqData5))
   )
 
   it should "combine the required data from all channels forming the template" in {
@@ -96,10 +92,7 @@ class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
     )
 
     template.requiredData should beValid(
-      obj(
-        Map("b" -> optString,
-            "c" -> obj(Map("p" -> string, "x" -> string, "y" -> string, "z" -> string)),
-            "d" -> strings)))
+      obj(Map("b" -> optString, "c" -> obj(Map("p" -> string, "z" -> string)), "d" -> strings)))
   }
 
   it should "combine the required data from email forming the template" in {
@@ -124,8 +117,7 @@ class CommTemplateSpec extends FlatSpec with Matchers with ValidatedMatchers {
       print
     )
 
-    template.requiredData should beValid(
-      obj(Map("b" -> optString, "c" -> obj(Map("p" -> string, "x" -> string, "y" -> string)), "d" -> strings)))
+    template.requiredData should beValid(obj(Map("b" -> optString, "c" -> obj(Map("p" -> string)), "d" -> strings)))
   }
 
   it should "combine the required data from sms forming the template" in {
