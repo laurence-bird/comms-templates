@@ -208,9 +208,9 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
   }
 
   it should "process valid print template" in {
-    val header = TemplateFile(commManifest.commType, Post, FileFormat.Text, "The Header")
-    val body   = TemplateFile(commManifest.commType, Post, FileFormat.Html, "The Html Body")
-    val footer = TemplateFile(commManifest.commType, Post, FileFormat.Text, "Footer")
+    val header = TemplateFile(commManifest.commType, Print, FileFormat.Text, "The Header")
+    val body   = TemplateFile(commManifest.commType, Print, FileFormat.Html, "The Html Body")
+    val footer = TemplateFile(commManifest.commType, Print, FileFormat.Text, "Footer")
 
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None
@@ -265,7 +265,7 @@ class TemplatesRepoSpec extends FlatSpec with Matchers with ValidatedMatchers {
   }
 
   it should "handle errors parsing print template" in {
-    val body = TemplateFile(commManifest.commType, Post, FileFormat.Html, "The Html Body")
+    val body = TemplateFile(commManifest.commType, Print, FileFormat.Html, "The Html Body")
 
     object MockTemplatesRetriever extends TemplatesRetriever {
       override def getEmailTemplate(commManifest: CommManifest): Option[ErrorsOr[EmailTemplateFiles]] = None

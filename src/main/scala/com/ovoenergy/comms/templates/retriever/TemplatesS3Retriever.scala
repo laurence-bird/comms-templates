@@ -65,14 +65,14 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
   }
 
   override def getPrintTemplate(commManifest: CommManifest): Option[ErrorsOr[PrintTemplateFiles]] = {
-    if (s3Client.listFiles(templatePrefix(Post, commManifest)).isEmpty) {
-      log.debug(s"No print template found for $commManifest") // TODO: update comms kafka messages, change post to print
+    if (s3Client.listFiles(templatePrefix(Print, commManifest)).isEmpty) {
+      log.debug(s"No print template found for $commManifest")
       None
     } else {
 
       val body: ErrorsOr[TemplateFile] = {
-        val option = s3File(Filenames.Print.body, Post, commManifest)
-          .map(TemplateFile(commManifest.commType, Post, FileFormat.Html, _))
+        val option = s3File(Filenames.Print.body, Print, commManifest)
+          .map(TemplateFile(commManifest.commType, Print, FileFormat.Html, _))
         Validated.fromOption(option, ifNone = NonEmptyList.of("HTML body file not found on S3"))
       }
 
