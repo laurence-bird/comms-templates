@@ -17,11 +17,9 @@ trait S3Client {
 
 }
 
-class AmazonS3ClientWrapper(client: AmazonS3Client) extends S3Client {
+class AmazonS3ClientWrapper(client: AmazonS3Client, TemplatesBucket: String = "ovo-comms-templates") extends S3Client {
 
   private val log = LoggerFactory.getLogger(getClass)
-
-  private val TemplatesBucket = "ovo-comms-templates"
 
   override def getUTF8TextFileContent(key: String): Option[String] = {
     try {
