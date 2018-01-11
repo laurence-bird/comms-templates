@@ -27,16 +27,16 @@ case class CommTemplate[M[_]: Applicative](
   }
 
   def aggregate: M[CommTemplate[Id]] =
-    Apply[M].map3(email.sequenceU, sms.sequenceU, print.sequenceU) { case (e, s, p) => CommTemplate[Id](e, s, p) }
+    Apply[M].map3(email.sequence, sms.sequence, print.sequence) { case (e, s, p) => CommTemplate[Id](e, s, p) }
 
   def requiredData: M[ErrorsOr[RequiredTemplateData.obj]] = {
-    Apply[M].map3(email.sequenceU, sms.sequenceU, print.sequenceU) {
+    Apply[M].map3(email.sequence, sms.sequence, print.sequence) {
       case (None, None, None) => Invalid(NonEmptyList.of("No templates to combine"))
       case (e, s, p) => {
         val requiredData: List[ErrorsOr[RequiredTemplateData.obj]] =
           List(e.map(_.requiredData), s.map(_.requiredData), p.map(_.requiredData)).flatten
 
-        requiredData.sequenceU.andThen(RequiredTemplateData.combine)
+        requiredData.sequence.andThen(RequiredTemplateData.combine)
       }
     }
   }

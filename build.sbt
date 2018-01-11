@@ -11,7 +11,7 @@ releaseCrossBuild := true
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "cats-core" % "0.9.0",
+  "org.typelevel" %% "cats-core" % "1.0.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "com.ovoenergy" %% "comms-kafka-messages" % "1.40",
   "org.parboiled" %% "parboiled" % "2.1.3",

@@ -17,14 +17,14 @@ case class EmailTemplate[M[_]: Applicative](
 ) {
 
   def aggregate: M[EmailTemplate[Id]] = {
-    (subject |@| htmlBody |@| textBody.sequenceU |@| sender.sequenceU) map {
+    (subject |@| htmlBody |@| textBody.sequence |@| sender.sequence) map {
       EmailTemplate[Id](_, _, _, _)
     }
   }
 
   def requiredData: M[ErrorsOr[RequiredTemplateData.obj]] = {
     import cats.instances.list._
-    (subject |@| htmlBody |@| textBody.sequenceU) map {
+    (subject |@| htmlBody |@| textBody.sequence) map {
       case (s, h, t) =>
         val templates: List[HandlebarsTemplate]           = List(Some(s), Some(h), t).flatten
         val requiredDatas: List[RequiredTemplateData.obj] = templates.map(_.requiredData)

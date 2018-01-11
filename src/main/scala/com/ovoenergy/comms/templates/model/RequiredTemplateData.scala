@@ -47,7 +47,7 @@ object RequiredTemplateData {
       val commonKeys = fields1.keySet.intersect(fields2.keySet).toList
 
       val aggregatedCommonValues: ErrorsOr[List[RequiredTemplateData]] =
-        commonKeys.traverseU(k => run(fields1(k), fields2(k), path :+ k))
+        commonKeys.traverse(k => run(fields1(k), fields2(k), path :+ k))
 
       val aggregatedCommonFields: ErrorsOr[Fields] =
         aggregatedCommonValues.map(values => (commonKeys zip values).toMap)
