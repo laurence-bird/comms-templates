@@ -1,9 +1,12 @@
 package com.ovoenergy.comms.templates.parsing.handlebars
 
-import cats.data.NonEmptyList
-import cats.data.Validated.{Invalid, Valid}
+import cats.{Traverse, UnorderedTraverse}
+import cats.data.{NonEmptyList, Validated}
 import cats.instances.map._
 import cats.syntax.traverse._
+import cats.instances.set._
+import cats.data.NonEmptyList._
+import cats.data.Validated.{Invalid, Valid, catsDataCommutativeApplicativeForValidated}
 import com.ovoenergy.comms.templates.ErrorsOr
 import com.ovoenergy.comms.templates.model.RequiredTemplateData
 import com.ovoenergy.comms.templates.model.RequiredTemplateData._
@@ -64,11 +67,25 @@ private[parsing] object IntermediateAST {
     def toRequiredTemplateData: ErrorsOr[RequiredTemplateData] = _convert
 
     def _convert: ErrorsOr[obj] = {
-      val validatedFields: ErrorsOr[Map[String, RequiredTemplateData]] =
-        fields.toMap.traverseU(_.toRequiredTemplateData)
-      validatedFields.map(fields => obj(fields))
-    }
 
+      type StringyMap[A] = Map[String, A]
+      type ErrorsOrU[A]  = Validated[Set[String], A]
+      type ErrorsOrMap   = ErrorsOrU[StringyMap[RequiredTemplateData]]
+      val traverse = UnorderedTraverse[StringyMap]
+
+      /*
+       * because traversing a map is inherently unordered our errors must be also
+       * and NonEmptyList does not fit the bill, the closest we can get is a Set really
+       * so we shove our errors into a set then turn them unsafely back into a NEL at the end
+       */
+      val validatedFields: ErrorsOrMap = traverse.unorderedTraverse(fields.toMap) { node =>
+        node.toRequiredTemplateData.leftMap(_.toList.toSet)
+      }
+
+      validatedFields
+        .leftMap(s => NonEmptyList.fromListUnsafe(s.toList))
+        .map(fields => obj(fields))
+    }
   }
 
   /**

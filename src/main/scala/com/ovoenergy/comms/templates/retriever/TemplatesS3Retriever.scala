@@ -56,7 +56,7 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
       val customSender: Option[String] = s3File(Filenames.Email.Sender, Email, commManifest)
 
       Some(
-        (subject |@| htmlBody) map {
+        (subject, htmlBody).mapN {
           case (a, b) =>
             EmailTemplateFiles(a, b, textBody, customSender)
         }

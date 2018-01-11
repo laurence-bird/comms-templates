@@ -3,7 +3,6 @@ package com.ovoenergy.comms.templates.model.template.processed.print
 import cats.data.NonEmptyList
 import cats.data.Validated.{Invalid, Valid}
 import cats.instances.option._
-import cats.syntax.CartesianBuilder
 import cats.implicits._
 import cats.syntax.cartesian._
 import cats.syntax.traverse._
