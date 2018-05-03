@@ -18,8 +18,9 @@ object TemplatesContext {
     * A context that provides no caching of templates.
     * Not recommended in production.
     */
-  def nonCachingContext(credentialsProvider: AWSCredentialsProvider): TemplatesContext = {
-    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider))
+  def nonCachingContext(credentialsProvider: AWSCredentialsProvider,
+                        bucket: String = "ovo-comms-templates"): TemplatesContext = {
+    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider), bucket)
     TemplatesContext(
       templatesRetriever = new TemplatesS3Retriever(s3Client),
       parser = new HandlebarsParsing(new PartialsS3Retriever(s3Client)),
@@ -31,8 +32,9 @@ object TemplatesContext {
     * A context that memoizes downloaded and parsed templates in a Caffeine cache.
     * The cache is bounded to 100 templates and has no expiry.
     */
-  def cachingContext(credentialsProvider: AWSCredentialsProvider): TemplatesContext = {
-    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider))
+  def cachingContext(credentialsProvider: AWSCredentialsProvider,
+                     bucket: String = "ovo-comms-templates"): TemplatesContext = {
+    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider), bucket)
     TemplatesContext(
       templatesRetriever = new TemplatesS3Retriever(s3Client),
       parser = new HandlebarsParsing(new PartialsS3Retriever(s3Client)),
@@ -43,10 +45,10 @@ object TemplatesContext {
   /**
     * A context that memoizes downloaded and parsed templates in a cache of your choice.
     */
-  def customCachingContext(
-      credentialsProvider: AWSCredentialsProvider,
-      cachingStrategy: CachingStrategy[CommManifest, ErrorsOr[CommTemplate[Id]]]): TemplatesContext = {
-    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider))
+  def customCachingContext(credentialsProvider: AWSCredentialsProvider,
+                           cachingStrategy: CachingStrategy[CommManifest, ErrorsOr[CommTemplate[Id]]],
+                           bucket: String = "ovo-comms-templates"): TemplatesContext = {
+    val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider), bucket)
     TemplatesContext(
       templatesRetriever = new TemplatesS3Retriever(s3Client),
       parser = new HandlebarsParsing(new PartialsS3Retriever(s3Client)),
