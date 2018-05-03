@@ -11,8 +11,6 @@ import com.ovoenergy.comms.templates.retriever.PartialsRetriever
 import org.scalatest._
 import RequiredTemplateData._
 
-import scala.collection.immutable.Seq
-
 class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
   val emailTemplateFile = TemplateFile(Service, Email, FileFormat.Text, "")
@@ -513,12 +511,11 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
   }
 
   private def testValid(input: String, expected: Map[String, RequiredTemplateData]) = {
-    new HandlebarsParsing(noOpPartialsRetriever, Set.empty).buildRequiredTemplateData(input) should be(
-      Valid(obj(expected)))
+    new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) should be(Valid(obj(expected)))
   }
 
   private def testInvalid(input: String) = {
-    new HandlebarsParsing(noOpPartialsRetriever, Set.empty).buildRequiredTemplateData(input) should be('Invalid)
+    new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) should be('Invalid)
   }
 
   it should "resolve partials with partials" in {
@@ -538,7 +535,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
                    Email,
                    Html,
                    "This template contains a partial: {{> a.partial  }}. And a partial at the end: {{>final.partial}}")
-    new HandlebarsParsing(partialsRetriever, Set.empty).resolvePartials(templateFile) shouldBe Right(
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Right(
       "This template contains a partial: This partial has another partial: The other partial. And a partial at the end: The final partial")
   }
 
@@ -549,30 +546,140 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
       }
     }
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial}}")
-    new HandlebarsParsing(partialsRetriever, Set.empty).resolvePartials(templateFile) shouldBe Left("An error")
+    new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Left("An error")
   }
 
   it should "ignore partials with only single curly braces" in {
     val templateFile = TemplateFile(Service, Email, Html, "This template contains a dodgy partial: {> a.partial}")
-    new HandlebarsParsing(noOpPartialsRetriever, Set.empty).resolvePartials(templateFile) shouldBe Right(
+    new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile) shouldBe Right(
       "This template contains a dodgy partial: {> a.partial}")
   }
 
   it should "reject templates that are not valid handlebars syntax" in {
     val invalidHandlebarsHTML =
       "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}</div>\\n</body>\\n</html>\""
-    new HandlebarsParsing(noOpPartialsRetriever, Set.empty).checkTemplateCompiles(invalidHandlebarsHTML) should be(
-      'Left)
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Left)
   }
 
   it should "correctly valid templates that are valid handlebars syntax" in {
     val invalidHandlebarsHTML =
       "\"<!DOCTYPE html>\\n<html>\\n<body>\\n<div>Random text: {{variable}}</div>\\n</body>\\n</html>\""
-    new HandlebarsParsing(noOpPartialsRetriever, Set.empty).checkTemplateCompiles(invalidHandlebarsHTML) should be(
-      'Right)
+    new HandlebarsParsing(noOpPartialsRetriever).checkTemplateCompiles(invalidHandlebarsHTML) should be('Right)
   }
 
-  it should "do the whole thing, including provided data fields in the requiredTemplateData output when configured" in {
+  it should "reject templates that references non-existent provided System parameter" in {
+    val reqData1 = obj(Map("system" -> obj(Map("date" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "system.date is not a valid system property field")
+  }
+
+  it should "reject templates that references provided System parameters with the wrong type" in {
+    val reqData1 = obj(Map("system" -> obj(Map("year" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "system.year is not a string")
+  }
+
+  it should "reject templates that references the provided System parameters as the wrong type" in {
+    val reqData1 = obj(Map("system" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "system property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided Profile parameter" in {
+    val reqData1 = obj(Map("profile" -> obj(Map("middleName" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "profile.middleName is not a valid profile property field")
+  }
+
+  it should "reject templates that references provided Profile parameters with the wrong type" in {
+    val reqData1 = obj(Map("profile" -> obj(Map("firstName" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "profile.firstName is not a string")
+  }
+
+  it should "reject templates that references the provided Profile parameters as the wrong type" in {
+    val reqData1 = obj(Map("profile" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "profile property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided Email Recipient parameter" in {
+    val reqData1 = obj(Map("recipient" -> obj(Map("emailSomething" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "recipient.emailSomething is not a valid recipient property field")
+  }
+
+  it should "reject templates that references provided Email Recipient parameters with the wrong type" in {
+    val reqData1 = obj(Map("recipient" -> obj(Map("emailAddress" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "recipient.emailAddress is not a string")
+  }
+
+  it should "reject templates that references the provided Email Recipient parameters as the wrong type" in {
+    val reqData1 = obj(Map("recipient" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) should haveInvalid(
+      "recipient property incorrect type")
+  }
+
+  it should "reject templates that references non-existent provided SMS Recipient parameter" in {
+    val reqData1 = obj(Map("recipient" -> obj(Map("mobileNumber" -> string))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid(
+      "recipient.mobileNumber is not a valid recipient property field")
+  }
+
+  it should "reject templates that references provided SMS Recipient parameters with the wrong type" in {
+    val reqData1 = obj(Map("recipient" -> obj(Map("telephoneNumber" -> optString))))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid(
+      "recipient.telephoneNumber is not a string")
+  }
+
+  it should "reject templates that references the provided SMS Recipient parameters as the wrong type" in {
+    val reqData1 = obj(Map("recipient" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) should haveInvalid(
+      "recipient property incorrect type")
+  }
+
+  it should "accept Email templates that correctly reference provided parameters" in {
+    val reqData1 = obj(
+      Map(
+        "field1"    -> string,
+        "system"    -> obj(Map("month" -> string, "dayOfMonth" -> string, "year" -> string)),
+        "recipient" -> obj(Map("emailAddress" -> string)),
+        "profile"   -> obj(Map("firstName" -> string, "lastName" -> string))
+      ))
+
+    val result = obj(Map("field1" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, emailTemplateFile) shouldBe Valid(result)
+  }
+
+  it should "accept SMS templates that correctly reference provided parameters" in {
+    val reqData1 = obj(
+      Map(
+        "field1"    -> string,
+        "system"    -> obj(Map("month" -> string, "dayOfMonth" -> string, "year" -> string)),
+        "recipient" -> obj(Map("telephoneNumber" -> string)),
+        "profile"   -> obj(Map("firstName" -> string, "lastName" -> string))
+      ))
+
+    val result = obj(Map("field1" -> string))
+
+    HandlebarsParsing.processProvidedDataFields(reqData1, smsTemplateFile) shouldBe Valid(result)
+  }
+
+  it should "do the whole thing" in {
 
     val templateContent =
       "A load of variables {{profile.firstName}} {{system.year}} {{recipient.emailAddress}} {{field1}} {{field2.sub1}} {{> aPartial}}"
@@ -585,19 +692,11 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
       }
     }
     val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
-    new HandlebarsParsing(partialsRetriever, Set(Validators.System, Validators.Recipient, Validators.Profile))
-      .parseTemplate(templateFile) should beValid(
+    new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should beValid(
       HandlebarsTemplate(
         rawExpandedContent =
           "A load of variables {{profile.firstName}} {{system.year}} {{recipient.emailAddress}} {{field1}} {{field2.sub1}} A partial {{partialField}} {{profile.lastName}}",
-        requiredData = obj(Map(
-          "field1"       -> string,
-          "partialField" -> string,
-          "field2"       -> obj(Map("sub1" -> string)),
-          "profile"      -> obj(Map("firstName" -> string, "lastName" -> string)),
-          "system"       -> obj(Map("year" -> string)),
-          "recipient"    -> obj(Map("emailAddress" -> string))
-        ))
+        requiredData = obj(Map("field1" -> string, "partialField" -> string, "field2" -> obj(Map("sub1" -> string))))
       ))
   }
 
@@ -616,8 +715,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
       }
     }
     val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
-    new HandlebarsParsing(partialsRetriever)
-      .parseTemplate(templateFile) should haveInvalid(
+    new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should haveInvalid(
       "Encountered excessive recursion when expanding partials"
     )
   }

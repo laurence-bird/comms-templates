@@ -38,10 +38,10 @@ object HandlebarsParsingProps extends Properties("HandlebarsParsing") {
   property("parses valid trees correctly") = forAllNoShrink { (tree: obj) =>
     val input = genHandlebarsTemplate(tree, Vector.empty)
     val success =
-      new HandlebarsParsing(noOpPartialsRetriever, Set.empty).buildRequiredTemplateData(input) == Valid(tree)
+      new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input) == Valid(tree)
     if (!success) {
       println(s"$input ->")
-      println(s"  ${new HandlebarsParsing(noOpPartialsRetriever, Set.empty).buildRequiredTemplateData(input)}")
+      println(s"  ${new HandlebarsParsing(noOpPartialsRetriever).buildRequiredTemplateData(input)}")
       println()
     }
     success

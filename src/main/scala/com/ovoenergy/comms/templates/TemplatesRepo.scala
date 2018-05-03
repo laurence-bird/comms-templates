@@ -26,8 +26,7 @@ object TemplatesRepo {
 
   private def getEmailTemplate(context: TemplatesContext,
                                commManifest: CommManifest): Option[ErrorsOr[EmailTemplate[Id]]] = {
-    val parser: (TemplateFile) => ErrorsOr[HandlebarsTemplate] =
-      context.parser.parseTemplate _
+    val parser: (TemplateFile) => ErrorsOr[HandlebarsTemplate] = context.parser.parseTemplate _
     context.templatesRetriever.getEmailTemplate(commManifest).map {
       _ andThen { t =>
         val subject: ErrorsOr[HandlebarsTemplate] = parser(t.subject)
@@ -41,8 +40,7 @@ object TemplatesRepo {
 
   private def getSMSTemplate(context: TemplatesContext,
                              commManifest: CommManifest): Option[ErrorsOr[SMSTemplate[Id]]] = {
-    val parser: (TemplateFile) => ErrorsOr[HandlebarsTemplate] =
-      context.parser.parseTemplate _
+    val parser = context.parser.parseTemplate _
     context.templatesRetriever.getSMSTemplate(commManifest).map {
       _ andThen { t =>
         val textBody = parser(t.textBody)
@@ -54,8 +52,7 @@ object TemplatesRepo {
   private def getPrintTemplate(context: TemplatesContext,
                                commManifest: CommManifest): Option[ErrorsOr[PrintTemplate[Id]]] = {
 
-    val parser: (TemplateFile) => ErrorsOr[HandlebarsTemplate] =
-      context.parser.parseTemplate _
+    val parser = context.parser.parseTemplate _
 
     context.templatesRetriever.getPrintTemplate(commManifest).map {
       _ andThen { t =>
