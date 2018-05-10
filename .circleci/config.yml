@@ -1,0 +1,36 @@
+version: 2
+
+jobs:
+  build:
+    working_directory: ~/comms-templates
+    machine: true
+    steps:
+      - checkout
+
+      - restore_cache:
+         keys:
+           - "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Branch }}"
+           - "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-master"
+
+      - run: sbt test tut
+
+      - save_cache:
+          key: "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Branch }}"
+          paths:
+            - ~/.sbt
+            - target/resolution-cache
+            - project/target/resolution-cache
+
+      - deploy:
+          name: Deploy if master branch
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" -a "${CIRCLE_PROJECT_USERNAME}" == "ovotech" ]; then
+              git checkout master                                                 # so we have a tracking branch to keep sbt-release happy
+              git config --global user.name "Circle CI"
+              git config --global user.email hello.comms@ovoenergy.com
+              git tag --delete circleci-release                                   # delete the tag so we can use it again next time
+              git push --delete origin circleci-release                           # delete the tag so we can use it again next time
+              git clone git@github.com:ovotech/comms-ci-scripts ../comms-ci-scripts
+              ../comms-ci-scripts/create_bintray_creds.sh
+              sbt "release with-defaults"
+            fi
