@@ -13,7 +13,8 @@ resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
 libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "1.0.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
-    "com.ovoenergy" %% "comms-kafka-messages" % "1.66",
+  "com.ovoenergy" %% "comms-kafka-messages" % "1.66",
+  "com.google.guava" % "guava" % "25.0-jre",
   "org.parboiled" %% "parboiled" % "2.1.3",
   "com.github.jknack" % "handlebars" % "4.0.6",
   "com.amazonaws" % "aws-java-sdk-s3" % "1.11.57",
