@@ -1,6 +1,7 @@
 package com.ovoenergy.comms.templates.util
 
 import java.security.MessageDigest
+import java.util.Base64
 
 object Hash {
 
@@ -16,6 +17,6 @@ object Hash {
       .getInstance("MD5")
       .digest(str.getBytes)
 
-    new String(hash).toLowerCase
+    Base64.getEncoder.withoutPadding().encodeToString(hash).toLowerCase
   }
 }
