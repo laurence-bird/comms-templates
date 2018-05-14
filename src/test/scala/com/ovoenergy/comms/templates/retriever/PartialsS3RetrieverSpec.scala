@@ -15,17 +15,17 @@ class PartialsS3RetrieverSpec extends FlatSpec with Matchers with EitherValues {
 
   val s3client = s3(
     contents = Map(
-      "service/fragments/email/html/header.html" -> "the HTML header",
-      "service/fragments/email/html/thing.html"  -> "another HTML fragment",
-      "service/fragments/email/txt/header.txt"   -> "the text header"
+      "fragments/email/html/header.html" -> "the HTML header",
+      "fragments/email/html/thing.html"  -> "another HTML fragment",
+      "fragments/email/txt/header.txt"   -> "the text header"
     ),
     files = Map(
-      "service/fragments/email/html" -> Seq(
-        "service/fragments/email/html/header.html",
-        "service/fragments/email/html/thing.html"
+      "fragments/email/html" -> Seq(
+        "fragments/email/html/header.html",
+        "fragments/email/html/thing.html"
       ),
-      "service/fragments/email/txt" -> Seq(
-        "service/fragments/email/txt/header.txt"
+      "fragments/email/txt" -> Seq(
+        "fragments/email/txt/header.txt"
       )
     )
   )
@@ -35,18 +35,16 @@ class PartialsS3RetrieverSpec extends FlatSpec with Matchers with EitherValues {
   behavior of "Partials Repo for emails"
 
   it should "get html partials" in {
-    testObj.getSharedPartial(TemplateFile(Service, Email, FileFormat.Html, ""), "header") shouldBe Right(
-      "the HTML header")
+    testObj.getSharedPartial(TemplateFile(Email, FileFormat.Html, ""), "header") shouldBe Right("the HTML header")
   }
 
   it should "get text partials" in {
-    testObj.getSharedPartial(TemplateFile(Service, Email, FileFormat.Text, ""), "header") shouldBe Right(
-      "the text header")
+    testObj.getSharedPartial(TemplateFile(Email, FileFormat.Text, ""), "header") shouldBe Right("the text header")
   }
 
   it should "fail if partial not present" in {
     testObj
-      .getSharedPartial(TemplateFile(Service, Email, FileFormat.Text, ""), "whatevs")
+      .getSharedPartial(TemplateFile(Email, FileFormat.Text, ""), "whatevs")
       .left
       .value should include("Could not find shared partial")
   }

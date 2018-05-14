@@ -3,7 +3,7 @@ package com.ovoenergy.comms.templates
 import cats.Id
 import com.amazonaws.auth.AWSCredentialsProvider
 import com.amazonaws.services.s3.AmazonS3Client
-import com.ovoenergy.comms.model.CommManifest
+import com.ovoenergy.comms.model.{CommManifest, TemplateManifest}
 import com.ovoenergy.comms.templates.cache.CachingStrategy
 import com.ovoenergy.comms.templates.model.HandlebarsTemplate
 import com.ovoenergy.comms.templates.model.template.processed.CommTemplate
@@ -24,7 +24,7 @@ object TemplatesContext {
     TemplatesContext(
       templatesRetriever = new TemplatesS3Retriever(s3Client),
       parser = new HandlebarsParsing(new PartialsS3Retriever(s3Client)),
-      cachingStrategy = CachingStrategy.noCache[CommManifest, ErrorsOr[CommTemplate[Id]]]
+      cachingStrategy = CachingStrategy.noCache[TemplateManifest, ErrorsOr[CommTemplate[Id]]]
     )
   }
 
@@ -38,7 +38,7 @@ object TemplatesContext {
     TemplatesContext(
       templatesRetriever = new TemplatesS3Retriever(s3Client),
       parser = new HandlebarsParsing(new PartialsS3Retriever(s3Client)),
-      cachingStrategy = CachingStrategy.caffeine[CommManifest, ErrorsOr[CommTemplate[Id]]](maximumSize = 100)
+      cachingStrategy = CachingStrategy.caffeine[TemplateManifest, ErrorsOr[CommTemplate[Id]]](maximumSize = 100)
     )
   }
 
@@ -46,7 +46,7 @@ object TemplatesContext {
     * A context that memoizes downloaded and parsed templates in a cache of your choice.
     */
   def customCachingContext(credentialsProvider: AWSCredentialsProvider,
-                           cachingStrategy: CachingStrategy[CommManifest, ErrorsOr[CommTemplate[Id]]],
+                           cachingStrategy: CachingStrategy[TemplateManifest, ErrorsOr[CommTemplate[Id]]],
                            bucket: String = "ovo-comms-templates"): TemplatesContext = {
     val s3Client = new AmazonS3ClientWrapper(new AmazonS3Client(credentialsProvider), bucket)
     TemplatesContext(
@@ -60,5 +60,5 @@ object TemplatesContext {
 case class TemplatesContext(
     templatesRetriever: TemplatesRetriever,
     parser: Parsing[HandlebarsTemplate],
-    cachingStrategy: CachingStrategy[CommManifest, ErrorsOr[CommTemplate[Id]]]
+    cachingStrategy: CachingStrategy[TemplateManifest, ErrorsOr[CommTemplate[Id]]]
 )

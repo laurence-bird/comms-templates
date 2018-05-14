@@ -13,8 +13,8 @@ import RequiredTemplateData._
 
 class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatchers {
 
-  val emailTemplateFile = TemplateFile(Service, Email, FileFormat.Text, "")
-  val smsTemplateFile   = TemplateFile(Service, SMS, FileFormat.Text, "")
+  val emailTemplateFile = TemplateFile(Email, FileFormat.Text, "")
+  val smsTemplateFile   = TemplateFile(SMS, FileFormat.Text, "")
 
   behavior of "#buildRequiredTemplateData"
 
@@ -531,8 +531,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
       }
     }
     val templateFile =
-      TemplateFile(Service,
-                   Email,
+      TemplateFile(Email,
                    Html,
                    "This template contains a partial: {{> a.partial  }}. And a partial at the end: {{>final.partial}}")
     new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Right(
@@ -545,12 +544,12 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
         Left("An error")
       }
     }
-    val templateFile = TemplateFile(Service, Email, Html, "This template contains a partial: {{> a.partial}}")
+    val templateFile = TemplateFile(Email, Html, "This template contains a partial: {{> a.partial}}")
     new HandlebarsParsing(partialsRetriever).resolvePartials(templateFile) shouldBe Left("An error")
   }
 
   it should "ignore partials with only single curly braces" in {
-    val templateFile = TemplateFile(Service, Email, Html, "This template contains a dodgy partial: {> a.partial}")
+    val templateFile = TemplateFile(Email, Html, "This template contains a dodgy partial: {> a.partial}")
     new HandlebarsParsing(noOpPartialsRetriever).resolvePartials(templateFile) shouldBe Right(
       "This template contains a dodgy partial: {> a.partial}")
   }
@@ -691,7 +690,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
         responses.getOrElse(partialName, Left("Non mapped response"))
       }
     }
-    val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
+    val templateFile = TemplateFile(Email, FileFormat.Text, templateContent)
     new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should beValid(
       HandlebarsTemplate(
         rawExpandedContent =
@@ -714,7 +713,7 @@ class HandlebarsParsingSpec extends FlatSpec with Matchers with ValidatedMatcher
         responses.getOrElse(partialName, Left("Non mapped response"))
       }
     }
-    val templateFile = TemplateFile(Service, Email, FileFormat.Text, templateContent)
+    val templateFile = TemplateFile(Email, FileFormat.Text, templateContent)
     new HandlebarsParsing(partialsRetriever).parseTemplate(templateFile) should haveInvalid(
       "Encountered excessive recursion when expanding partials"
     )
