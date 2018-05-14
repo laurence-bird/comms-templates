@@ -14,7 +14,6 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "cats-core" % "1.0.0",
   "com.chuusai" %% "shapeless" % "2.3.2",
   "com.ovoenergy" %% "comms-kafka-messages" % "1.66",
-//  "commons-codec" % "commons-codec" % "1.11",
   "com.google.guava" % "guava" % "25.0-jre",
   "org.parboiled" %% "parboiled" % "2.1.3",
   "com.github.jknack" % "handlebars" % "4.0.6",
