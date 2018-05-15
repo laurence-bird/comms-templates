@@ -11,7 +11,7 @@ import com.ovoenergy.comms.templates.model.template.files.TemplateFile
 import com.ovoenergy.comms.templates.model.template.files.email.EmailTemplateFiles
 import com.ovoenergy.comms.templates.model.template.files.print.PrintTemplateFiles
 import com.ovoenergy.comms.templates.model.template.files.sms.SMSTemplateFiles
-import com.ovoenergy.comms.templates.s3.S3Client
+import com.ovoenergy.comms.templates.s3.{S3Client, S3Prefix}
 import org.slf4j.LoggerFactory
 
 class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
@@ -97,10 +97,9 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
   private def s3File(filename: String, channel: Channel, templateManifest: TemplateManifest): Option[String] =
     s3Client.getUTF8TextFileContent(templateFileKey(channel, templateManifest, filename))
 
-  private def templatePrefix(channel: Channel, templateManifest: TemplateManifest): String =
-    s"${templateManifest.id}/${templateManifest.version}/${channel.toString.toLowerCase}"
-
   private def templateFileKey(channel: Channel, templateManifest: TemplateManifest, filename: String): String =
     s"${templatePrefix(channel, templateManifest)}/$filename"
 
+  private def templatePrefix(channel: Channel, templateManifest: TemplateManifest): String =
+    s"${S3Prefix.fromTemplateManifest(templateManifest)}/${channel.toString.toLowerCase}"
 }
