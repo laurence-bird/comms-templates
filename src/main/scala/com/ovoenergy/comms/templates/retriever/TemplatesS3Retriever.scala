@@ -76,7 +76,7 @@ class TemplatesS3Retriever(s3Client: S3Client) extends TemplatesRetriever {
         Validated.fromOption(option, ifNone = NonEmptyList.of("HTML body file not found on S3"))
       }
 
-      Some(body.map(PrintTemplateFiles(_)))
+      Some(body.map(PrintTemplateFiles))
     }
   }
 

@@ -4,3 +4,4 @@ import com.ovoenergy.comms.model.{Channel, CommType}
 import com.ovoenergy.comms.templates.model.FileFormat
 
 case class TemplateFile(channel: Channel, format: FileFormat, content: String)
+case class LegacyTemplateFile(channel: Channel, format: FileFormat, content: String)
