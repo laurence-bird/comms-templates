@@ -11,13 +11,11 @@ object TemplateMetadataContext {
       .withCredentials(credentialsProvider)
       .build()
 
-    TemplateMetadataContext(
-      amazonDynamoDBAsync,
-      tableName
-    )
+    TemplateMetadataContext(amazonDynamoDBAsync, tableName)
   }
+
 }
 
-case class TemplateMetadataContext private (dynamoDb: AmazonDynamoDBAsync, tableName: String) extends AutoCloseable {
+case class TemplateMetadataContext(dynamoDb: AmazonDynamoDBAsync, tableName: String) extends AutoCloseable {
   override def close(): Unit = dynamoDb.shutdown()
 }
