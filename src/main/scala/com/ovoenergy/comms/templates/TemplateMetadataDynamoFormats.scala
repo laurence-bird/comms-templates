@@ -12,8 +12,11 @@ trait TemplateMetadataDynamoFormats {
     CommType.fromString(str).toRight(TypeCoercionError(new RuntimeException(s"$str is not a valid CommType"))))(
     _.toString)
 
-  implicit lazy val brandFormat: DynamoFormat[Brand] = DynamoFormat.xmap[Brand, String](str =>
-    Brand.fromString(str).toRight(TypeCoercionError(new RuntimeException(s"$str is not a valid Brand"))))(_.value)
+  implicit lazy val brandFormat: DynamoFormat[Brand] = DynamoFormat.xmap[Brand, String](
+    str =>
+      Brand
+        .fromStringCaseInsensitive(str)
+        .toRight(TypeCoercionError(new RuntimeException(s"$str is not a valid Brand"))))(_.value)
 
   implicit lazy val templateIdFormat: DynamoFormat[TemplateId] =
     DynamoFormat.iso[TemplateId, String](TemplateId)(_.value)
