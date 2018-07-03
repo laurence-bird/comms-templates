@@ -12,7 +12,7 @@ jobs:
            - "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Branch }}"
            - "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-master"
 
-      - run: sbt test tut
+      - run: sbt +test tut
 
       - save_cache:
           key: "{{ .Environment.CIRCLE_PROJECT_REPONAME }}-{{ .Branch }}"
