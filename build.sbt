@@ -3,7 +3,7 @@ organization := "com.ovoenergy"
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 scalaVersion := "2.12.6"
-crossScalaVersions ++= Seq("2.11.8", "2.11.11")
+crossScalaVersions ++= Seq("2.11.11")
 releaseCrossBuild := true
 
 val kafkaMessagesVersion = "1.71"
