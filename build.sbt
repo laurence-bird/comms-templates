@@ -1,19 +1,12 @@
 bintrayOrganization := Some("ovotech")
 organization := "com.ovoenergy"
 licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
-
+name := "comms-templates"
 scalaVersion := "2.12.6"
 crossScalaVersions ++= Seq("2.11.11")
 releaseCrossBuild := true
 
 val kafkaMessagesVersion = "1.71"
-
-lazy val root = Project("root", file("."))
-  .settings(
-    releasePublishArtifactsAction := {},
-    publishArtifact := false,
-    name := "comms-templates"
-  )
 
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
 resolvers += Resolver.sonatypeRepo("snapshots") // for scalacheck-shapeless
