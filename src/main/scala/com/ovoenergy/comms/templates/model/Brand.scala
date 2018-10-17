@@ -33,7 +33,37 @@ object Brand {
     override val displayValue = "VNet"
   }
 
-  val allBrands: IndexedSeq[Brand] = Vector(Ovo, Boost, Lumo, Corgi, Vnet)
+  case object PeterboroughEnergy extends Brand {
+    override val value        = "peterboroughEnergy"
+    override val displayValue = "Peterborough Energy"
+  }
+
+  case object EnergySW extends Brand {
+    override val value        = "energySW"
+    override val displayValue = "Energy SW"
+  }
+
+  case object Fairerpower extends Brand {
+    override val value        = "fairerpower"
+    override val displayValue = "Fairerpower"
+  }
+
+  case object SouthendEnergy extends Brand {
+    override val value        = "southendEnergy"
+    override val displayValue = "Southend Energy"
+  }
+
+  val allBrands: IndexedSeq[Brand] = Vector(
+    Ovo,
+    Boost,
+    Lumo,
+    Corgi,
+    Vnet,
+    PeterboroughEnergy,
+    EnergySW,
+    Fairerpower,
+    SouthendEnergy
+  )
 
   def fromString(str: String): Option[Brand] = allBrands.find(_.value == str)
 
