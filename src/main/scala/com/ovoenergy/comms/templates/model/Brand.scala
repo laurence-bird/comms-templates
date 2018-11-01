@@ -53,6 +53,11 @@ object Brand {
     override val displayValue = "Southend Energy"
   }
 
+  case object ChargedEv extends Brand {
+    override val value        = "chargedev"
+    override val displayValue = "Charged EV"
+  }
+
   val allBrands: IndexedSeq[Brand] = Vector(
     Ovo,
     Boost,
