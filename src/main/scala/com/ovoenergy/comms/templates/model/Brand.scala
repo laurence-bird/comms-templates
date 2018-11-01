@@ -67,7 +67,8 @@ object Brand {
     PeterboroughEnergy,
     EnergySW,
     Fairerpower,
-    SouthendEnergy
+    SouthendEnergy,
+    ChargedEv
   )
 
   def fromString(str: String): Option[Brand] = allBrands.find(_.value == str)
