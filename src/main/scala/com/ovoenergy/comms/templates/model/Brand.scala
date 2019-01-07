@@ -58,6 +58,11 @@ object Brand {
     override val displayValue = "Charged EV"
   }
 
+  case object SparkEnergy extends Brand {
+    override def value: String = "sparkEnergy"
+    override def displayValue: String = "Spark Energy"
+  }
+
   val allBrands: IndexedSeq[Brand] = Vector(
     Ovo,
     Boost,
@@ -68,7 +73,8 @@ object Brand {
     EnergySW,
     Fairerpower,
     SouthendEnergy,
-    ChargedEv
+    ChargedEv,
+    SparkEnergy
   )
 
   def fromString(str: String): Option[Brand] = allBrands.find(_.value == str)
