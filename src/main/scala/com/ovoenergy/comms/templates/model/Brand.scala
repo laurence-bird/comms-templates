@@ -59,7 +59,7 @@ object Brand {
   }
 
   case object SparkEnergy extends Brand {
-    override def value: String = "sparkEnergy"
+    override def value: String        = "sparkEnergy"
     override def displayValue: String = "Spark Energy"
   }
 
