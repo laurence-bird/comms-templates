@@ -5,6 +5,7 @@ name := "comms-templates"
 scalaVersion := "2.12.6"
 releaseCrossBuild := true
 
+
 val kafkaMessagesVersion = "1.79.4"
 
 resolvers += Resolver.bintrayRepo("ovotech", "maven")
